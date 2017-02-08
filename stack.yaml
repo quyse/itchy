@@ -4,7 +4,7 @@ resolver:
 
 packages:
 - .
-- location: ../flaw
+- location: deps/flaw
   subdirs:
   - flaw-base
   - flaw-sqlite
