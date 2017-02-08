@@ -55,7 +55,7 @@ runner-image:
     DOCKER_DRIVER: overlay
   script:
   - "mv itchy/itchy-runner containers/runner/"
-  - "docker login -u QUAYIO_LOGIN -p $QUAYIO_PASSWORD quay.io"
+  - "docker login -u $QUAYIO_LOGIN -p $QUAYIO_PASSWORD quay.io"
   - "docker build -t $REPO -f containers/runner/Dockerfile containers/runner"
   - "docker push $REPO"
   tags:
