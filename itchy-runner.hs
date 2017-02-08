@@ -1,4 +1,4 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings, ViewPatterns #-}
 
 module Main(main) where
 
@@ -6,15 +6,19 @@ import Control.Exception
 import Control.Monad
 import qualified Data.ByteString as B
 import Data.IORef
+import Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Data.Text.IO as T
 import qualified Data.Yaml as Y
 import qualified Network.HTTP.Client as H
 import qualified Network.HTTP.Client.TLS as H
-import System.Environment
+import qualified System.Directory as D
+import qualified System.Environment as E
 import System.IO
 import System.IO.Unsafe
 import qualified System.Process as P
+import qualified System.Posix as P
 
 import Flaw.Book
 
@@ -51,14 +55,14 @@ main = do
 			{ report_error = Just $ T.pack $ show e
 			}
 		]
-	putStrLn . T.unpack . T.decodeUtf8 . Y.encode =<< readIORef reportRef
+	T.putStrLn . T.decodeUtf8 . Y.encode =<< readIORef reportRef
 
 run :: IO ()
 run = withBook $ \bk -> do
-	uploadFileName <- getEnv "ITCHIO_UPLOAD_FILENAME"
+	uploadFileName <- E.getEnv "ITCHIO_UPLOAD_FILENAME"
 
 	-- download if needed
-	maybeUploadId <- (read <$>) <$> lookupEnv "ITCHIO_UPLOAD_ID"
+	maybeUploadId <- (read <$>) <$> E.lookupEnv "ITCHIO_UPLOAD_ID"
 	case maybeUploadId of
 		Just uploadId -> handleReport (\e r -> r
 			{ report_download = ReportDownload_failed e
@@ -67,11 +71,11 @@ run = withBook $ \bk -> do
 			httpManager <- H.getGlobalManager
 
 			-- init itch api
-			itchToken <- T.pack <$> getEnv "ITCHIO_API_KEY"
+			itchToken <- T.pack <$> E.getEnv "ITCHIO_API_KEY"
 			itchApi <- book bk $ newItchApi httpManager itchToken
 
 			-- try to get download key id
-			maybeDownloadKeyId <- (read <$>) <$> lookupEnv "ITCHIO_DOWNLOAD_KEY_ID"
+			maybeDownloadKeyId <- (read <$>) <$> E.lookupEnv "ITCHIO_DOWNLOAD_KEY_ID"
 
 			-- get download url
 			url <- itchDownloadUpload itchApi uploadId maybeDownloadKeyId
@@ -99,6 +103,41 @@ run = withBook $ \bk -> do
 		{ report_unpack = ReportUnpack_failed e
 		}) $ do
 		P.callProcess "unar" ["-q", "-o", "work", uploadFileName]
+
+		-- parse entries
+		let
+			parseEntry name path = do
+				status <- P.getFileStatus $ T.unpack path
+				let P.CMode mode = P.fileMode status
+				if P.isRegularFile status then return ReportEntry_file
+					{ reportEntry_name = name
+					, reportEntry_mode = mode
+					, reportEntry_size = fromIntegral $ P.fileSize status
+					}
+				else if P.isDirectory status then do
+					subEntries <- parseSubEntries path
+					return ReportEntry_directory
+						{ reportEntry_name = name
+						, reportEntry_mode = mode
+						, reportEntry_entries = subEntries
+						}
+				else if P.isSymbolicLink status then do
+					link <- P.readSymbolicLink $ T.unpack path
+					return ReportEntry_symlink
+						{ reportEntry_name = name
+						, reportEntry_mode = mode
+						, reportEntry_link = T.pack link
+						}
+				else return ReportEntry_unknown
+					{ reportEntry_name = name
+					, reportEntry_mode = mode
+					}
+			parseSubEntries path = do
+				subNames <- D.listDirectory $ T.unpack path
+				forM subNames $ \(T.pack -> subName) -> parseEntry subName $ path <> "/" <> subName
+
+		entries <- parseSubEntries "work"
+
 		report $ \r -> r
-			{ report_unpack = ReportUnpack_succeeded
+			{ report_unpack = ReportUnpack_succeeded entries
 			}

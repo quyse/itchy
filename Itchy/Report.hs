@@ -9,10 +9,12 @@ module Itchy.Report
 	( Report(..)
 	, ReportDownload(..)
 	, ReportUnpack(..)
+	, ReportEntry(..)
 	) where
 
 import qualified Data.Aeson.Types as A
 import qualified Data.Text as T
+import Data.Word
 import GHC.Generics(Generic)
 
 data Report = Report
@@ -39,12 +41,38 @@ instance A.ToJSON ReportDownload where
 data ReportUnpack
 	= ReportUnpack_notStarted
 	| ReportUnpack_skipped
-	| ReportUnpack_succeeded
+	| ReportUnpack_succeeded [ReportEntry]
 	| ReportUnpack_failed !T.Text
 	deriving Generic
 instance A.FromJSON ReportUnpack where
 	parseJSON = A.genericParseJSON jsonOptions
 instance A.ToJSON ReportUnpack where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportEntry
+	= ReportEntry_unknown
+		{ reportEntry_name :: !T.Text
+		, reportEntry_mode :: {-# UNPACK #-} !Word32
+		}
+	| ReportEntry_file
+		{ reportEntry_name :: !T.Text
+		, reportEntry_mode :: {-# UNPACK #-} !Word32
+		, reportEntry_size :: {-# UNPACK #-} !Word64
+		}
+	| ReportEntry_directory
+		{ reportEntry_name :: !T.Text
+		, reportEntry_mode :: {-# UNPACK #-} !Word32
+		, reportEntry_entries :: [ReportEntry]
+		}
+	| ReportEntry_symlink
+		{ reportEntry_name :: !T.Text
+		, reportEntry_mode :: {-# UNPACK #-} !Word32
+		, reportEntry_link :: !T.Text
+		}
+	deriving Generic
+instance A.FromJSON ReportEntry where
+	parseJSON = A.genericParseJSON jsonOptions
+instance A.ToJSON ReportEntry where
 	toJSON = A.genericToJSON jsonOptions
 
 jsonOptions :: A.Options

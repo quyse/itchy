@@ -58,11 +58,13 @@ executable itchy-runner
     , bytestring
     , cereal
     , cereal-text
+    , directory
     , flaw-base
     , http-client
     , http-client-tls
     , http-types
     , process
+    , unix
     , text
     , yaml
   default-language:    Haskell2010
