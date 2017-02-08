@@ -46,3 +46,23 @@ executable itchyd
     , warp
     , yaml
   default-language:    Haskell2010
+
+executable itchy-runner
+  main-is:             itchy-runner.hs
+  other-modules:
+    Itchy.Itch
+    Itchy.Report
+  build-depends:
+    aeson
+    , base
+    , bytestring
+    , cereal
+    , cereal-text
+    , flaw-base
+    , http-client
+    , http-client-tls
+    , http-types
+    , process
+    , text
+    , yaml
+  default-language:    Haskell2010

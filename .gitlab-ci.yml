@@ -42,3 +42,22 @@ itchyd-image:
   tags:
   - linux
   - shared
+
+runner-image:
+  stage: image
+  image: docker:git
+  services:
+  - docker:dind
+  dependencies:
+  - binaries
+  variables:
+    REPO: registry.gitlab.com/itchy-bot/itch-builds:latest
+    DOCKER_DRIVER: overlay
+  script:
+  - "mv itchy/itchy-runner containers/runner/"
+  - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com"
+  - "docker build -t $REPO -f containers/runner/Dockerfile containers/runner"
+  - "docker push $REPO"
+  tags:
+  - linux
+  - shared
