@@ -22,7 +22,6 @@ module Itchy.Itch
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as BL
 import Data.Monoid
 import qualified Data.Serialize as S
 import Data.Serialize.Text()
