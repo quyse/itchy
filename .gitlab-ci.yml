@@ -55,7 +55,7 @@ runner-image:
     DOCKER_DRIVER: overlay
   script:
   - "mv itchy/itchy-runner containers/runner/"
-  - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com"
+  - "docker login -u gitlab-ci-token -p $GITLAB_REGISTRY_ITCHY_TOKEN registry.gitlab.com"
   - "docker build -t $REPO -f containers/runner/Dockerfile containers/runner"
   - "docker push $REPO"
   tags:
