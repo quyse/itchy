@@ -12,8 +12,8 @@ build-type:          Simple
 -- extra-source-files:  
 cabal-version:       >=1.10
 
-executable itchy
-  main-is:             itchy.hs
+executable itchyd
+  main-is:             itchyd.hs
   other-modules:
     Itchy.Itch
     Itchy.Routes
@@ -38,7 +38,6 @@ executable itchy
     , optparse-applicative
     , process
     , stm
-    , telegram-api
     , template-haskell
     , text
     , wai-app-static

@@ -1,0 +1,43 @@
+# Gitlab CI config for itchy
+
+before_script:
+- git submodule foreach git clean -xfd
+- git submodule init
+- git submodule update
+
+stages:
+- build
+- image
+
+binaries:
+  stage: build
+  script:
+  - "mkdir itchy"
+  - "stack --no-terminal build --test --copy-bins --local-bin-path itchy"
+  artifacts:
+    paths:
+    - itchy
+    expire_in: 1 week
+  tags:
+  - haskellstack
+  - linux
+  - x64
+
+itchyd-image:
+  stage: image
+  image: docker:git
+  services:
+  - docker:dind
+  dependencies:
+  - binaries
+  variables:
+    REPO: registry.gitlab.com/quyse/itchy:latest
+    DOCKER_DRIVER: overlay
+  script:
+  - "mv itchy/itchyd containers/itchyd/"
+  - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com"
+  - "docker build -t $REPO -f containers/itchyd/Dockerfile containers/itchyd"
+  - "docker push $REPO"
+  tags:
+  - linux
+  - shared
