@@ -13,6 +13,7 @@ binaries:
   stage: build
   script:
   - "mkdir itchy"
+  - "npm install"
   - "stack --no-terminal build --test --copy-bins --local-bin-path itchy"
   artifacts:
     paths:
