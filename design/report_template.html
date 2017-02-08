@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Sanity Keeper Report for quyse/flaw</title>
+		<style>
+			body {
+				background: #fff;
+				color: #222;
+				font-family: serif;
+				padding: 10px 20px;
+			}
+			table {
+				border-collapse: collapse;
+				border: 1px dashed #ccc;
+				background: #fcfcfc;
+			}
+			td {
+				border-top: 1px dashed #ccc;
+				border-bottom: 1px dashed #ccc;
+				border-collapse: collapse;
+				vertical-align: top;
+				padding: 1px 5px;
+			}
+			tr:first-child {
+				background: #f0f0f0;
+			}
+			.status > * {
+				font-weight: bold;
+				text-align: center;
+				padding: 1px 4px;
+				margin: 1px 2px;
+				border-radius: 3px;
+			}
+			.channel > * {
+				font-family: monospace;
+				font-weight: bold;
+				text-align: left;
+				white-space: nowrap;
+				padding: 1px 4px;
+			}
+			.tag {
+				font-family: monospace;
+				font-weight: bold;
+				background: #222;
+				color: #fff;
+				padding: 1px;
+				border-radius: 3px;
+			}
+			.arch {
+				font-family: monospace;
+				font-weight: bold;
+			}
+			.ok .status > * {
+				background: #0a0;
+				color: #fff;
+			}
+			.info .status > * {
+				background: #fff;
+				color: #333;
+				border: 1px solid #888;
+			}
+			.warn .status > * {
+				background: #c80;
+				color: #fff;
+			}
+			.bad .status > * {
+				background: #a00;
+				color: #fff;
+			}
+			.pass .status > * {
+				background: #0a0;
+				color: #fff;
+			}
+			.fail .status > * {
+				background: #a00;
+				color: #fff;
+			}
+			a {
+				color: #00f;
+			}
+			a.rollup {
+				text-decoration: none;
+				border-bottom: 1px dashed #00f;
+			}
+			.name {
+			}
+			.file {
+				font-family: monospace;
+			}
+			.category {
+				border-top: 1px dashed #ccc;
+				border-bottom: 1px dashed #ccc;
+				text-align: center;
+				vertical-align: middle;
+				font-weight: bold;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Sanity Keeper Report for quyse/flaw</h1>
+		<h2>General notes</h2>
+		<table>
+			<tr>
+				<th>Status</th>
+				<th>Note</th>
+				<th>Comments</th>
+			</tr>
+			<tr class="info">
+				<td class="status"><div>INFO</div></td>
+				<td><div>Report generated 2017/02/07 2:41</div></td>
+				<td></td>
+			</tr>
+			<tr class="ok" style="display: none">
+				<td class="status"><div>OK</div></td>
+				<td><div>Access to paid content is obtained via press system</div></td>
+				<td>There're paid uploads in the package, but the author has opted their games into <a href="https://itch.io/press/user-list">itch.io press system</a>, and Sanity Keeper is a legitimate press user, so it got access to all uploads.</td>
+			</tr>
+			<tr class="ok">
+				<td class="status"><div>OK</div></td>
+				<td><div>Access to paid content is obtained via download key</div></td>
+				<td>The author kindly provided download key to Sanity Keeper, so the bot got access to all uploads.</td>
+			</tr>
+			<tr class="ok" style="display: none">
+				<td class="status"><div>OK</div></td>
+				<td><div>All content is free</div></td>
+				<td>All content is free, so Sanity Keeper had zero troubles testing it.</td>
+			</tr>
+			<tr class="warn" style="display: none">
+				<td class="status"><div>WARN</div></td>
+				<td><div>Only free content has been tested</div></td>
+				<td>Some content is paid, and Sanity Keeper cannot access it. Author may consider providing download key to the bot, or opting their games into <a href="https://itch.io/press/user-list">itch.io press system</a>, as the bot is a legitimate press user.</td>
+			</tr>
+			<tr class="bad" style="display: none">
+				<td class="status"><div>BAD</div></td>
+				<td><div>No free content</div></td>
+				<td>There's no free uploads, and Sanity Keeper is unable to access paid ones (if there're some). Author may consider providing download key to the bot, or opting their games into <a href="https://itch.io/press/user-list">itch.io press system</a>, as the bot is a legitimate press user.</td>
+			</tr>
+		</table>
+		<h2>Uploads</h2>
+		<table>
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>File</th>
+				<th>Tags</th>
+			</tr>
+			<tr>
+				<td class="category" rowspan="4">Demo</td>
+				<td class="name">CrossCode Demo (Windows)</td>
+				<td class="file">crosscode-demo-win.zip</td>
+				<td><span class="tag">windows</span> <span class="tag">demo</span></td>
+			</tr>
+			<tr>
+				<td class="name">CrossCode Demo (Linux, 32 Bit)</td>
+				<td class="file">crosscode-demo-linux32.zip</td>
+				<td><span class="tag">linux</span> <span class="tag">demo</span></td>
+			</tr>
+			<tr>
+				<td class="name">CrossCode Demo (Linux, 64 Bit)</td>
+				<td class="file">crosscode-demo-linux64.zip</td>
+				<td><span class="tag">linux</span> <span class="tag">demo</span></td>
+			</tr>
+			<tr>
+				<td class="name">CrossCode Demo (Mac)</td>
+				<td class="file">crosscode-demo-osx.zip</td>
+				<td><span class="tag">macos</span> <span class="tag">demo</span></td>
+			</tr>
+			<tr>
+				<td class="category" rowspan="4">Paid</td>
+				<td class="name">CrossCode (Win)</td>
+				<td class="file">crosscode-early-access_windows.zip</td>
+				<td><span class="tag">windows</span></td>
+			</tr>
+			<tr>
+				<td class="name">CrossCode (Linux, 32 Bit)</td>
+				<td class="file">crosscode-early-access-linux32.zip</td>
+				<td><span class="tag">linux</span></td>
+			</tr>
+			<tr>
+				<td class="name">CrossCode (Linux, 64 Bit)</td>
+				<td class="file">crosscode-early-access-linux64.zip</td>
+				<td><span class="tag">linux</span></td>
+			</tr>
+			<tr>
+				<td class="name">CrossCode (Mac)</td>
+				<td class="file">crosscode-early-access-osx.zip</td>
+				<td><span class="tag">macos</span></td>
+			</tr>
+		</table>
+		<h2>Configuration tests</h2>
+		<table>
+			<tr>
+				<th>Status</th>
+				<th>Package (channel)</th>
+				<th>Test</th>
+				<th>Tips and comments</th>
+			</tr>
+			<tr class="bad">
+				<td class="status"><div>BAD</div></td>
+				<td class="channel"><div>model-editor-windows</div></td>
+				<td>Anti-virus check is red. <a href="https://virustotal.com/">Virus Total report</a></td>
+				<td class="comment">You're advised to perform AV check of your build machine. If it's false positive, do not take it easy: users tend to trust antiviruses. <a class="rollup" href="">What to do if my software is marked as malware?</a></td>
+			</tr>
+			<tr class="bad">
+				<td class="status"><div>BAD</div></td>
+				<td class="channel"><div>model-editor-macos</div></td>
+				<td>macOS package is not tagged with itch.io <span class="tag">macos</span> tag</td>
+				<td class="comment">Missing tag prevents <a href="https://itch.io/app">itch app</a> from selecting this version of your game at install time.</td>
+			</tr>
+			<tr class="warn">
+				<td class="status"><div>WARN</div></td>
+				<td class="channel"><div>model-editor-windows</div></td>
+				<td>There's only 64-bit executable</td>
+				<td class="comment">According to <a href="http://hwstats.unity3d.com/pc/os-win.html">Unity Hardware Stats (Jan 2017)</a>, <b>20.1%</b> of Windows people still using 32-bit systems. They will be unable to play your 64-bit build.</td>
+			</tr>
+			<tr class="warn">
+				<td class="status"><div>WARN</div></td>
+				<td class="channel"><div>model-editor-windows</div></td>
+				<td>1 EXE and 3 DLLs are not digitally signed</td>
+				<td class="comment">Unfortunately anti-virus software tends to mark unsigned executables as malware (even if it's not actually malware). As a matter of fact, signed executables seem for them as much more trusted. Consider obtaining a code signing certificate and digitally signing the executables.</td>
+			</tr>
+			<tr class="warn">
+				<td class="status"><div>WARN</div></td>
+				<td class="channel"><div>model-editor-linux</div></td>
+				<td>No <code>.desktop</code> file</td>
+				<td class="comment"></td>
+			</tr>
+			<tr class="warn">
+				<td class="status"><div>WARN</div></td>
+				<td class="channel"><div>model-editor-macos</div></td>
+				<td>App bundle is not signed with Apple signature</td>
+			</tr>
+			<tr class="info">
+				<td class="status"><div>INFO</div></td>
+				<td class="channel">
+					<div>model-editor-windows</div>
+					<div>model-editor-linux</div>
+					<div>model-editor-macos</div>
+				</td>
+				<td>No <code>.itch.toml</code> file</td>
+				<td class="comment">Using <code>.itch.toml</code> file is optional, but still may be useful. <a href="https://itch.io/docs/itch/integrating/manifest.html">App manifests documentation</a></td>
+			</tr>
+			<tr class="ok">
+				<td class="status"><div>OK</div></td>
+				<td class="channel"><div>model-editor-windows</div></td>
+				<td>Package is properly tagged with itch.io <span class="tag">windows</span> tag</td>
+				<td class="comment">Tags allow <a href="https://itch.io/app">itch app</a> to select proper version of your game at install time.</td>
+			</tr>
+			<tr class="ok">
+				<td class="status"><div>OK</div></td>
+				<td class="channel"><div>model-editor-linux</div></td>
+				<td>Package is properly tagged with itch.io <span class="tag">linux</span> tag</td>
+				<td class="comment">Tags allow <a href="https://itch.io/app">itch app</a> to select proper version of your game at install time.</td>
+			</tr>
+			<tr class="ok">
+				<td class="status"><div>OK</div></td>
+				<td class="channel"><div>model-editor-linux</div></td>
+				<td>Both 64-bit and 32-bit binaries are present</td>
+				<td class="comment">It's a good practice to offer both 64-bit and 32-bit binaries. Obviously 64-bit binaries cannot be executed on 32-bit system, but the bitness problem on Linux also exists other way around: a lot of 64-bit systems don't have necessary "multilib" packages installed in order to run 32-bit binaries.</td>
+			</tr>
+			<tr class="ok">
+				<td class="status"><div>OK</div></td>
+				<td class="channel"><div>model-editor-macos</div></td>
+				<td>App bundle is correct</td>
+			</tr>
+			<tr class="ok">
+				<td class="status"><div>OK</div></td>
+				<td class="channel"><div>model-editor-macos</div></td>
+				<td>There's universal binary for both <span class="arch">x86_64</span> and <span class="arch">i386</span> architectures</td>
+				<td class="comment">Universal binaries on macOS may bundle together multiple executables for different platforms in a single file. Appropriate executable is selected by OS automatically at launch time.</td>
+			</tr>
+		</table>
+		<h2>Smoke tests</h2>
+		<table>
+			<tr>
+				<th>Status</th>
+				<th>System</th>
+				<th>Comments</th>
+			</tr>
+			<tr class="pass">
+				<td class="status"><div>PASS</div></td>
+				<td>Ubuntu 17.04 <span class="arch">x86_64</span></td>
+			</tr>
+			<tr class="pass">
+				<td class="status"><div>PASS</div></td>
+				<td>Ubuntu 17.04 <span class="arch">i386</span></td>
+			</tr>
+			<tr class="pass">
+				<td class="status"><div>PASS</div></td>
+				<td>Ubuntu 16.10 <span class="arch">x86_64</span></td>
+			</tr>
+			<tr class="pass">
+				<td class="status"><div>PASS</div></td>
+				<td>Ubuntu 16.10 <span class="arch">i386</span></td>
+			</tr>
+			<tr class="pass">
+				<td class="status"><div>PASS</div></td>
+				<td>Ubuntu 16.04 <span class="arch">x86_64</span></td>
+			</tr>
+			<tr class="pass">
+				<td class="status"><div>PASS</div></td>
+				<td>Ubuntu 16.04 <span class="arch">i386</span></td>
+			</tr>
+			<tr class="fail">
+				<td class="status"><div>FAIL</div></td>
+				<td>Ubuntu 14.04 <span class="arch">x86_64</span></td>
+			</tr>
+			<tr class="fail">
+				<td class="status"><div>FAIL</div></td>
+				<td>Ubuntu 14.04 <span class="arch">i386</span></td>
+			</tr>
+			<tr class="fail">
+				<td class="status"><div>FAIL</div></td>
+				<td>Arch Linux (latest) <span class="arch">x86_64</span></td>
+			</tr>
+			<tr class="fail">
+				<td class="status"><div>FAIL</div></td>
+				<td>Arch Linux (latest) <span class="arch">i386</span></td>
+			</tr>
+		</table>
+	</body>
+</html>

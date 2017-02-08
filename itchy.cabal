@@ -1,0 +1,49 @@
+name:                itchy
+version:             0.1.0.0
+-- synopsis:            
+-- description:         
+license:             MIT
+-- license-file:        LICENSE
+author:              Alexander Bich
+maintainer:          quyse0@gmail.com
+-- copyright:           
+category:            Game
+build-type:          Simple
+-- extra-source-files:  
+cabal-version:       >=1.10
+
+executable itchy
+  main-is:             itchy.hs
+  other-modules:
+    Itchy.Itch
+    Itchy.Routes
+    Itchy.Static
+  build-depends:
+    aeson
+    , base
+    , blaze-html
+    , bytestring
+    , cereal
+    , cereal-text
+    , cookie
+    , cryptonite
+    , directory
+    , flaw-base
+    , flaw-sqlite
+    , http-client
+    , http-client-tls
+    , http-types
+    , memory
+    , mime-types
+    , optparse-applicative
+    , process
+    , stm
+    , telegram-api
+    , template-haskell
+    , text
+    , wai-app-static
+    , wai-extra
+    , wai-routes
+    , warp
+    , yaml
+  default-language:    Haskell2010

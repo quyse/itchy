@@ -1,0 +1,8 @@
+{ "name": "itchy-client-build"
+, "version": "0.0.1"
+, "description": "itchy client build"
+, "devDependencies":
+	{ "stylus": ">=0.53.0"
+	, "uglify-js": ">=2.6.1"
+	}
+}
