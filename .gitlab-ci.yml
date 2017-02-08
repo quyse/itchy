@@ -51,11 +51,11 @@ runner-image:
   dependencies:
   - binaries
   variables:
-    REPO: registry.gitlab.com/itchy-bot/itch-builds:latest
+    REPO: quay.io/quyse/itchy-runner:latest
     DOCKER_DRIVER: overlay
   script:
   - "mv itchy/itchy-runner containers/runner/"
-  - "docker login -u gitlab-ci-token -p $GITLAB_REGISTRY_ITCHY_TOKEN registry.gitlab.com"
+  - "docker login -u QUAYIO_LOGIN -p $QUAYIO_PASSWORD quay.io"
   - "docker build -t $REPO -f containers/runner/Dockerfile containers/runner"
   - "docker push $REPO"
   tags:
