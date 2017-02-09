@@ -22,8 +22,6 @@ data Report = Report
 	, report_download :: !ReportDownload
 	, report_unpack :: !ReportUnpack
 	} deriving Generic
-instance A.FromJSON Report where
-	parseJSON = A.genericParseJSON jsonOptions
 instance A.ToJSON Report where
 	toJSON = A.genericToJSON jsonOptions
 
@@ -33,8 +31,6 @@ data ReportDownload
 	| ReportDownload_succeeded
 	| ReportDownload_failed !T.Text
 	deriving Generic
-instance A.FromJSON ReportDownload where
-	parseJSON = A.genericParseJSON jsonOptions
 instance A.ToJSON ReportDownload where
 	toJSON = A.genericToJSON jsonOptions
 
@@ -44,8 +40,6 @@ data ReportUnpack
 	| ReportUnpack_succeeded [ReportEntry]
 	| ReportUnpack_failed !T.Text
 	deriving Generic
-instance A.FromJSON ReportUnpack where
-	parseJSON = A.genericParseJSON jsonOptions
 instance A.ToJSON ReportUnpack where
 	toJSON = A.genericToJSON jsonOptions
 
@@ -70,8 +64,6 @@ data ReportEntry
 		, reportEntry_link :: !T.Text
 		}
 	deriving Generic
-instance A.FromJSON ReportEntry where
-	parseJSON = A.genericParseJSON jsonOptions
 instance A.ToJSON ReportEntry where
 	toJSON = A.genericToJSON jsonOptions
 
