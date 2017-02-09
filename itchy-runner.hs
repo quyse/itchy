@@ -15,6 +15,7 @@ import qualified Network.HTTP.Client as H
 import qualified Network.HTTP.Client.TLS as H
 import qualified System.Directory as D
 import qualified System.Environment as E
+import System.Exit
 import System.IO
 import System.IO.Unsafe
 import qualified System.Process as P
@@ -30,6 +31,7 @@ reportRef :: IORef Report
 reportRef = unsafePerformIO $ newIORef Report
 	{ report_error = Nothing
 	, report_download = ReportDownload_notStarted
+	, report_avcheck = ReportAVCheck_notStarted
 	, report_unpack = ReportUnpack_notStarted
 	}
 
@@ -42,7 +44,10 @@ reportError f = do
 	throwIO ReportedError
 
 handleReport :: (T.Text -> Report -> Report) -> IO a -> IO a
-handleReport h io = catch io $ \(SomeException e) -> reportError $ h $ T.pack $ show e
+handleReport h io = io `catches`
+	[ Handler $ \ReportedError -> throwIO ReportedError
+	, Handler $ \(SomeException e) -> reportError $ h $ T.pack $ show e
+	]
 
 data ReportedError = ReportedError deriving Show
 instance Exception ReportedError
@@ -97,6 +102,19 @@ run = withBook $ \bk -> do
 		Nothing -> report $ \r -> r
 			{ report_download = ReportDownload_skipped
 			}
+
+	-- AV check
+	handleReport (\e r -> r
+		{ report_avcheck = ReportAVCheck_failed e
+		}) $ do
+		(exitCode, output, errOutput) <- P.readProcessWithExitCode "clamscan" ["-ria", "--no-summary", uploadFileName] ""
+		case exitCode of
+			ExitSuccess -> report $ \r -> r
+				{ report_avcheck = ReportAVCheck_ok
+				}
+			ExitFailure _ -> reportError $ \r -> r
+				{ report_avcheck = ReportAVCheck_failed $ T.pack output <> T.pack errOutput
+				}
 
 	-- unpack
 	handleReport (\e r -> r

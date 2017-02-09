@@ -8,6 +8,7 @@ Description: Report structures.
 module Itchy.Report
 	( Report(..)
 	, ReportDownload(..)
+	, ReportAVCheck(..)
 	, ReportUnpack(..)
 	, ReportEntry(..)
 	) where
@@ -20,6 +21,7 @@ import GHC.Generics(Generic)
 data Report = Report
 	{ report_error :: !(Maybe T.Text)
 	, report_download :: !ReportDownload
+	, report_avcheck :: !ReportAVCheck
 	, report_unpack :: !ReportUnpack
 	} deriving Generic
 instance A.ToJSON Report where
@@ -32,6 +34,14 @@ data ReportDownload
 	| ReportDownload_failed !T.Text
 	deriving Generic
 instance A.ToJSON ReportDownload where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportAVCheck
+	= ReportAVCheck_notStarted
+	| ReportAVCheck_ok
+	| ReportAVCheck_failed !T.Text
+	deriving Generic
+instance A.ToJSON ReportAVCheck where
 	toJSON = A.genericToJSON jsonOptions
 
 data ReportUnpack
