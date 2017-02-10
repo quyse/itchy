@@ -124,35 +124,31 @@ run = withBook $ \bk -> do
 
 		-- parse entries
 		let
-			parseEntry name path = do
+			parseEntry path = do
 				status <- P.getFileStatus $ T.unpack path
 				let P.CMode mode = P.fileMode status
 				if P.isRegularFile status then return ReportEntry_file
-					{ reportEntry_name = name
-					, reportEntry_mode = mode
+					{ reportEntry_mode = mode
 					, reportEntry_size = fromIntegral $ P.fileSize status
 					}
 				else if P.isDirectory status then do
 					subEntries <- parseSubEntries path
 					return ReportEntry_directory
-						{ reportEntry_name = name
-						, reportEntry_mode = mode
+						{ reportEntry_mode = mode
 						, reportEntry_entries = subEntries
 						}
 				else if P.isSymbolicLink status then do
 					link <- P.readSymbolicLink $ T.unpack path
 					return ReportEntry_symlink
-						{ reportEntry_name = name
-						, reportEntry_mode = mode
+						{ reportEntry_mode = mode
 						, reportEntry_link = T.pack link
 						}
 				else return ReportEntry_unknown
-					{ reportEntry_name = name
-					, reportEntry_mode = mode
+					{ reportEntry_mode = mode
 					}
 			parseSubEntries path = do
 				subNames <- D.listDirectory $ T.unpack path
-				forM subNames $ \(T.pack -> subName) -> parseEntry subName $ path <> "/" <> subName
+				HM.fromList <$> forM subNames (\(T.pack -> subName) -> (subName, ) <$> parseEntry (path <> "/" <> subName))
 
 		entries <- parseSubEntries "work"
 

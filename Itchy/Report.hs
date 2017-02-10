@@ -46,8 +46,7 @@ instance A.ToJSON ReportAVCheck where
 
 data ReportUnpack
 	= ReportUnpack_notStarted
-	| ReportUnpack_skipped
-	| ReportUnpack_succeeded [ReportEntry]
+	| ReportUnpack_succeeded !(HM.HashMap T.Text ReportEntry)
 	| ReportUnpack_failed !T.Text
 	deriving Generic
 instance A.ToJSON ReportUnpack where
@@ -55,22 +54,18 @@ instance A.ToJSON ReportUnpack where
 
 data ReportEntry
 	= ReportEntry_unknown
-		{ reportEntry_name :: !T.Text
-		, reportEntry_mode :: {-# UNPACK #-} !Word32
+		{ reportEntry_mode :: {-# UNPACK #-} !Word32
 		}
 	| ReportEntry_file
-		{ reportEntry_name :: !T.Text
-		, reportEntry_mode :: {-# UNPACK #-} !Word32
+		{ reportEntry_mode :: {-# UNPACK #-} !Word32
 		, reportEntry_size :: {-# UNPACK #-} !Word64
 		}
 	| ReportEntry_directory
-		{ reportEntry_name :: !T.Text
-		, reportEntry_mode :: {-# UNPACK #-} !Word32
-		, reportEntry_entries :: [ReportEntry]
+		{ reportEntry_mode :: {-# UNPACK #-} !Word32
+		, reportEntry_entries :: !(HM.HashMap T.Text ReportEntry)
 		}
 	| ReportEntry_symlink
-		{ reportEntry_name :: !T.Text
-		, reportEntry_mode :: {-# UNPACK #-} !Word32
+		{ reportEntry_mode :: {-# UNPACK #-} !Word32
 		, reportEntry_link :: !T.Text
 		}
 	deriving Generic
