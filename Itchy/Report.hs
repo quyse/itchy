@@ -21,7 +21,7 @@ import GHC.Generics(Generic)
 data Report = Report
 	{ report_error :: !(Maybe T.Text)
 	, report_download :: !ReportDownload
-	, report_avcheck :: !ReportAVCheck
+	, report_avCheck :: !ReportAVCheck
 	, report_unpack :: !ReportUnpack
 	} deriving Generic
 instance A.ToJSON Report where

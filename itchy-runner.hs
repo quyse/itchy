@@ -31,7 +31,7 @@ reportRef :: IORef Report
 reportRef = unsafePerformIO $ newIORef Report
 	{ report_error = Nothing
 	, report_download = ReportDownload_notStarted
-	, report_avcheck = ReportAVCheck_notStarted
+	, report_avCheck = ReportAVCheck_notStarted
 	, report_unpack = ReportUnpack_notStarted
 	}
 
@@ -105,15 +105,15 @@ run = withBook $ \bk -> do
 
 	-- AV check
 	handleReport (\e r -> r
-		{ report_avcheck = ReportAVCheck_failed e
+		{ report_avCheck = ReportAVCheck_failed e
 		}) $ do
 		(exitCode, output, errOutput) <- P.readProcessWithExitCode "clamscan" ["-ria", "--no-summary", uploadFileName] ""
 		case exitCode of
 			ExitSuccess -> report $ \r -> r
-				{ report_avcheck = ReportAVCheck_ok
+				{ report_avCheck = ReportAVCheck_ok
 				}
 			ExitFailure _ -> reportError $ \r -> r
-				{ report_avcheck = ReportAVCheck_failed $ T.pack output <> T.pack errOutput
+				{ report_avCheck = ReportAVCheck_failed $ T.pack output <> T.pack errOutput
 				}
 
 	-- unpack
