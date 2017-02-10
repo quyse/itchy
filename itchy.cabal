@@ -60,11 +60,14 @@ executable itchy-runner
     , cereal-text
     , directory
     , flaw-base
+    , htoml
     , http-client
     , http-client-tls
     , http-types
     , process
     , unix
+    , unordered-containers
     , text
+    , vector
     , yaml
   default-language:    Haskell2010

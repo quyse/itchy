@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, PatternSynonyms, ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings, PatternSynonyms, TupleSections, ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-missing-pattern-synonym-signatures #-}
 
 module Main(main) where
@@ -6,11 +6,13 @@ module Main(main) where
 import Control.Exception
 import Control.Monad
 import qualified Data.ByteString as B
+import qualified Data.HashMap.Strict as HM
 import Data.IORef
 import Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO as T
+import qualified Data.Vector as V
 import qualified Data.Yaml as Y
 import qualified Network.HTTP.Client as H
 import qualified Network.HTTP.Client.TLS as H
@@ -21,6 +23,8 @@ import System.IO
 import System.IO.Unsafe
 import qualified System.Process as P
 import qualified System.Posix as P
+import qualified Text.Toml as Toml
+import qualified Text.Toml.Types as Toml
 
 import Flaw.Book
 
@@ -34,6 +38,7 @@ reportRef = unsafePerformIO $ newIORef Report
 	, report_download = ReportDownload_notStarted
 	, report_avCheck = ReportAVCheck_notStarted
 	, report_unpack = ReportUnpack_notStarted
+	, report_itchToml = ReportItchToml_notStarted
 	}
 
 report :: (Report -> Report) -> IO ()
@@ -47,6 +52,12 @@ reportError f = do
 handleReport :: (T.Text -> Report -> Report) -> IO a -> IO a
 handleReport h io = io `catches`
 	[ Handler $ \ReportedError -> throwIO ReportedError
+	, Handler $ \(SomeException e) -> reportError $ h $ T.pack $ show e
+	]
+
+handleIsolatedReport :: (T.Text -> Report -> Report) -> IO () -> IO ()
+handleIsolatedReport h io = io `catches`
+	[ Handler $ \ReportedError -> return ()
 	, Handler $ \(SomeException e) -> reportError $ h $ T.pack $ show e
 	]
 
@@ -155,6 +166,115 @@ run = withBook $ \bk -> do
 
 		report $ \r -> r
 			{ report_unpack = ReportUnpack_succeeded entries
+			}
+
+	-- parse .itch.toml
+	handleIsolatedReport (\e r -> r
+		{ report_itchToml = ReportItchToml_wrong e
+		}) $ do
+		let reportItchTomlError e = reportError $ \r -> r
+			{ report_itchToml = ReportItchToml_wrong e
+			}
+
+		-- choose .itch.toml
+		unpack <- report_unpack <$> readIORef reportRef
+		itchTomlPath <- case unpack of
+			-- .itch.toml at the root
+			ReportUnpack_succeeded
+				( HM.lookup ".itch.toml" ->
+					Just (ReportEntry_file {})
+				) -> return "/.itch.toml"
+			-- .itch.toml in a single directory
+			ReportUnpack_succeeded
+				( HM.toList ->
+					[ ( directoryName
+						, ReportEntry_directory
+							{ reportEntry_entries = HM.lookup ".itch.toml" -> Just (ReportEntry_file {})
+							}
+						)
+					]
+				) -> return $ directoryName <> "/.itch.toml"
+			-- whatever else is unsupported
+			_ -> reportError $ \r -> r
+				{ report_itchToml = ReportItchToml_missing
+				}
+
+		eitherTomlDoc <- Toml.parseTomlDoc ".itch.toml" <$> T.readFile (T.unpack $ WORK_DIR <> "/" <> itchTomlPath)
+		itchToml <- case eitherTomlDoc of
+			Right rootTable -> do
+				prereqs <- case HM.lookup "prereqs" rootTable of
+					Just prereqsNode -> case prereqsNode of
+						Toml.VTArray prereqsArray -> forM prereqsArray $ \prereqTable -> do
+							name <- case HM.lookup "name" prereqTable of
+								Just (Toml.VString name) -> return name
+								Just _ -> reportItchTomlError "prereq name must be a string"
+								Nothing -> reportItchTomlError "prereq must have a name"
+							return ReportItchTomlPrereq
+								{ reportItchTomlPrereq_name = name
+								}
+						_ -> reportItchTomlError "prereqs must be an array of tables"
+					Nothing -> return V.empty
+				actions <- case HM.lookup "actions" rootTable of
+					Just actionsNode -> case actionsNode of
+						Toml.VTArray actionsArray -> forM actionsArray $ \actionTable -> do
+							actionName <- case HM.lookup "name" actionTable of
+								Just (Toml.VString name) -> return name
+								Just _ -> reportItchTomlError "action name must be a string"
+								Nothing -> reportItchTomlError "action must have a name"
+							actionPath <- case HM.lookup "path" actionTable of
+								Just (Toml.VString path) -> return path
+								Just _ -> reportItchTomlError "action path must be a string"
+								Nothing -> reportItchTomlError "action must have a path"
+							actionIcon <- case HM.lookup "icon" actionTable of
+								Just (Toml.VString icon) -> return icon
+								Just _ -> reportItchTomlError "action icon must be a string"
+								Nothing -> return ""
+							actionScope <- case HM.lookup "scope" actionTable of
+								Just (Toml.VString scope) -> return scope
+								Just _ -> reportItchTomlError "action scope must be a string"
+								Nothing -> return ""
+							actionArgs <- case HM.lookup "args" actionTable of
+								Just (Toml.VArray argsArray) -> forM argsArray $ \argNode -> case argNode of
+									Toml.VString arg -> return arg
+									_ -> reportItchTomlError "action arg must be a string"
+								Just _ -> reportItchTomlError "action args must be an array of strings"
+								Nothing -> return V.empty
+							-- action without locales
+							let action = ReportItchTomlAction
+								{ reportItchTomlAction_name = actionName
+								, reportItchTomlAction_path = actionPath
+								, reportItchTomlAction_icon = actionIcon
+								, reportItchTomlAction_scope = actionScope
+								, reportItchTomlAction_args = V.toList actionArgs
+								, reportItchTomlAction_locales = HM.empty
+								}
+							locales <- case HM.lookup "locales" actionTable of
+								Just (Toml.VTable localesTable) -> forM localesTable $ \localeNode -> case localeNode of
+									Toml.VTable localeTable -> do
+										localizedActionName <- case HM.lookup "name" localeTable of
+											Just (Toml.VString name) -> return name
+											Just _ -> reportItchTomlError "localized action name must be a string"
+											Nothing -> return actionName
+										return action
+											{ reportItchTomlAction_name = localizedActionName
+											}
+									_ -> reportItchTomlError "action locale must be a table"
+								Just _ -> reportItchTomlError "action locales must be a table"
+								Nothing -> return HM.empty
+							return action
+								{ reportItchTomlAction_locales = locales
+								}
+						_ -> reportItchTomlError "actions must be an array of tables"
+					Nothing -> return V.empty
+				return ReportItchToml_ok
+					{ reportItchToml_prereqs = V.toList prereqs
+					, reportItchToml_actions = V.toList actions
+					}
+			Left _e -> reportError $ \r -> r
+				{ report_itchToml = ReportItchToml_malformed
+				}
+		report $ \r -> r
+			{ report_itchToml = itchToml
 			}
 
 pattern WORK_DIR = "package"

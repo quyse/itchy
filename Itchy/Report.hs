@@ -11,9 +11,13 @@ module Itchy.Report
 	, ReportAVCheck(..)
 	, ReportUnpack(..)
 	, ReportEntry(..)
+	, ReportItchToml(..)
+	, ReportItchTomlPrereq(..)
+	, ReportItchTomlAction(..)
 	) where
 
 import qualified Data.Aeson.Types as A
+import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as T
 import Data.Word
 import GHC.Generics(Generic)
@@ -23,6 +27,7 @@ data Report = Report
 	, report_download :: !ReportDownload
 	, report_avCheck :: !ReportAVCheck
 	, report_unpack :: !ReportUnpack
+	, report_itchToml :: !ReportItchToml
 	} deriving Generic
 instance A.ToJSON Report where
 	toJSON = A.genericToJSON jsonOptions
@@ -70,6 +75,39 @@ data ReportEntry
 		}
 	deriving Generic
 instance A.ToJSON ReportEntry where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportItchToml
+	= ReportItchToml_notStarted
+	| ReportItchToml_missing
+	| ReportItchToml_failed !T.Text
+	| ReportItchToml_malformed
+	| ReportItchToml_ok
+		{ reportItchToml_prereqs :: ![ReportItchTomlPrereq]
+		, reportItchToml_actions :: ![ReportItchTomlAction]
+		}
+	| ReportItchToml_wrong
+		{ reportItchToml_error :: !T.Text
+		}
+	deriving Generic
+instance A.ToJSON ReportItchToml where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportItchTomlPrereq = ReportItchTomlPrereq
+	{ reportItchTomlPrereq_name :: !T.Text
+	} deriving Generic
+instance A.ToJSON ReportItchTomlPrereq where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportItchTomlAction = ReportItchTomlAction
+	{ reportItchTomlAction_name :: !T.Text
+	, reportItchTomlAction_path :: !T.Text
+	, reportItchTomlAction_icon :: !T.Text
+	, reportItchTomlAction_scope :: !T.Text
+	, reportItchTomlAction_args :: [T.Text]
+	, reportItchTomlAction_locales :: !(HM.HashMap T.Text ReportItchTomlAction)
+	} deriving Generic
+instance A.ToJSON ReportItchTomlAction where
 	toJSON = A.genericToJSON jsonOptions
 
 jsonOptions :: A.Options
