@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings, ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings, PatternSynonyms, ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-missing-pattern-synonym-signatures #-}
 
 module Main(main) where
 
@@ -120,7 +121,7 @@ run = withBook $ \bk -> do
 	handleReport (\e r -> r
 		{ report_unpack = ReportUnpack_failed e
 		}) $ do
-		P.callProcess "unar" ["-q", "-o", "work", uploadFileName]
+		P.callProcess "unar" ["-q", "-o", WORK_DIR, uploadFileName]
 
 		-- parse entries
 		let
@@ -150,8 +151,10 @@ run = withBook $ \bk -> do
 				subNames <- D.listDirectory $ T.unpack path
 				HM.fromList <$> forM subNames (\(T.pack -> subName) -> (subName, ) <$> parseEntry (path <> "/" <> subName))
 
-		entries <- parseSubEntries "work"
+		entries <- parseSubEntries WORK_DIR
 
 		report $ \r -> r
 			{ report_unpack = ReportUnpack_succeeded entries
 			}
+
+pattern WORK_DIR = "package"
