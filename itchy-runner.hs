@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, PatternSynonyms, TupleSections, ViewPatterns #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings, PatternSynonyms, TupleSections, ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-missing-pattern-synonym-signatures #-}
 
 module Main(main) where
@@ -14,6 +14,7 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO as T
 import qualified Data.Vector as V
 import qualified Data.Yaml as Y
+import Magic
 import qualified Network.HTTP.Client as H
 import qualified Network.HTTP.Client.TLS as H
 import qualified System.Directory as D
@@ -39,6 +40,7 @@ reportRef = unsafePerformIO $ newIORef Report
 	, report_avCheck = ReportAVCheck_notStarted
 	, report_unpack = ReportUnpack_notStarted
 	, report_itchToml = ReportItchToml_notStarted
+	, report_binaries = ReportBinaries_notStarted
 	}
 
 report :: (Report -> Report) -> IO ()
@@ -276,5 +278,78 @@ run = withBook $ \bk -> do
 		report $ \r -> r
 			{ report_itchToml = itchToml
 			}
+
+	-- use magic to find executables
+	handleReport (\_e r -> r) $ do
+		ReportUnpack_succeeded rootEntries <- report_unpack <$> readIORef reportRef
+		magic <- magicOpen [MagicMimeType]
+		magicLoadDefault magic
+		let
+			addBinary path binary = report $ \r -> case report_binaries r of
+				ReportBinaries_notStarted -> r
+					{ report_binaries = ReportBinaries_info
+						{ reportBinaries_binaries = HM.singleton path binary
+						}
+					}
+				info@ReportBinaries_info
+					{ reportBinaries_binaries = binaries
+					} -> r
+					{ report_binaries = info
+						{ reportBinaries_binaries = HM.insert path binary binaries
+						}
+					}
+			analyseEntry entry path = case entry of
+				ReportEntry_file {} -> do
+					let realPath = WORK_DIR <> "/" <> T.unpack path
+					mime <- magicFile magic realPath
+					case mime of
+						"application/x-executable" {- ELF (Linux) -} -> do
+							-- get ELF libraries the executable depends on
+							{-
+							I run the following:
+							find /usr/bin -exec readelf -d {} \; | grep NEEDED
+							and checked that the following regexp matches all 12744 lines:
+							^ 0x[0-9]+ \(NEEDED\) +Shared library: \[[a-zA-Z0-9\-\.\+\_]+\]$
+							So must be pretty solid.
+							-}
+							readelfOutput <- T.pack <$> P.readProcess "readelf" ["-rd", realPath] ""
+							-- get needed libraries
+							let neededLibraries = concat $ flip map (T.lines readelfOutput) $ \case
+								(T.words -> [_, "(NEEDED)", "Shared", "library:", libraryWithBrackets]) ->
+									if T.length libraryWithBrackets > 2
+										&& T.head libraryWithBrackets == '['
+										&& T.last libraryWithBrackets == ']' then
+										[T.take (T.length libraryWithBrackets - 2) $ T.drop 1 libraryWithBrackets]
+									else []
+								_ -> []
+							let neededDeps = flip map neededLibraries $ \library -> ReportDep
+								{ reportDep_name = library
+								, reportDep_version = T.empty
+								}
+							-- calculate glibc version
+							let glibcVersions = concat $ flip map (T.lines readelfOutput) $ \case
+								(T.words -> (_ : _ : _ : _ : (T.breakOn "@GLIBC_" -> (_, glibcVersion)) : _)) | T.length glibcVersion > 0 -> [T.drop 7 glibcVersion]
+								_ -> []
+							let deps = if null glibcVersions then neededDeps
+								else ReportDep
+									{ reportDep_name = "GLIBC"
+									, reportDep_version = T.intercalate "." $ map (T.pack . show)
+										(maximum $ map (map (read . T.unpack) . T.splitOn ".") glibcVersions :: [Int])
+									} : neededDeps
+							addBinary path ReportBinary_elf
+								{ reportBinary_arch = ReportArch_x86
+								, reportBinary_deps = deps
+								}
+						"application/x-dosexec" {- EXE (Windows) -} -> print (path, mime) -- TODO
+						"application/x-mach-binary" {- Mach-O (macOS) -} -> print (path, mime) -- TODO
+						_ -> return ()
+				ReportEntry_directory
+					{ reportEntry_entries = entries
+					} -> analyseEntries entries (path <> "/")
+				_ -> return ()
+			analyseEntries entries path =
+				forM_ (HM.toList entries) $
+					\(entryName, entry) -> analyseEntry entry $ path <> entryName
+		analyseEntries rootEntries T.empty
 
 pattern WORK_DIR = "package"

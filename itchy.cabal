@@ -64,6 +64,7 @@ executable itchy-runner
     , http-client
     , http-client-tls
     , http-types
+    , magic
     , process
     , unix
     , unordered-containers

@@ -14,6 +14,11 @@ module Itchy.Report
 	, ReportItchToml(..)
 	, ReportItchTomlPrereq(..)
 	, ReportItchTomlAction(..)
+	, ReportBinaries(..)
+	, ReportBinary(..)
+	, ReportMachoSubBinary(..)
+	, ReportArch(..)
+	, ReportDep(..)
 	) where
 
 import qualified Data.Aeson.Types as A
@@ -28,6 +33,7 @@ data Report = Report
 	, report_avCheck :: !ReportAVCheck
 	, report_unpack :: !ReportUnpack
 	, report_itchToml :: !ReportItchToml
+	, report_binaries :: !ReportBinaries
 	} deriving Generic
 instance A.ToJSON Report where
 	toJSON = A.genericToJSON jsonOptions
@@ -108,6 +114,52 @@ data ReportItchTomlAction = ReportItchTomlAction
 	, reportItchTomlAction_locales :: !(HM.HashMap T.Text ReportItchTomlAction)
 	} deriving Generic
 instance A.ToJSON ReportItchTomlAction where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportBinaries
+	= ReportBinaries_notStarted
+	| ReportBinaries_info
+		{ reportBinaries_binaries :: !(HM.HashMap T.Text ReportBinary)
+		}
+	deriving Generic
+instance A.ToJSON ReportBinaries where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportBinary
+	= ReportBinary_pe
+		{ reportBinary_arch :: !ReportArch
+		, reportBinary_deps :: [ReportDep]
+		}
+	| ReportBinary_elf
+		{ reportBinary_arch :: !ReportArch
+		, reportBinary_deps :: [ReportDep]
+		}
+	| ReportBinary_macho
+		{ reportBinary_binaries :: [ReportMachoSubBinary]
+		}
+	deriving Generic
+instance A.ToJSON ReportBinary where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportMachoSubBinary = ReportMachoSubBinary
+	{ reportMachoSubBinary_arch :: !ReportArch
+	, reportMachoSubBinary_deps :: [ReportDep]
+	} deriving Generic
+instance A.ToJSON ReportMachoSubBinary where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportArch
+	= ReportArch_x86
+	| ReportArch_x64
+	deriving Generic
+instance A.ToJSON ReportArch where
+	toJSON = A.genericToJSON jsonOptions
+
+data ReportDep = ReportDep
+	{ reportDep_name :: !T.Text
+	, reportDep_version :: !T.Text
+	} deriving Generic
+instance A.ToJSON ReportDep where
 	toJSON = A.genericToJSON jsonOptions
 
 jsonOptions :: A.Options
