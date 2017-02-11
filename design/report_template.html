@@ -25,6 +25,7 @@
 				background: #f0f0f0;
 			}
 			.status > * {
+				font-family: sans-serif;
 				font-weight: bold;
 				text-align: center;
 				padding: 1px 4px;
@@ -66,6 +67,16 @@
 			.bad .status > * {
 				background: #a00;
 				color: #fff;
+			}
+			.wait .status > * {
+				background: #fff;
+				color: #333;
+				border: 1px solid #888;
+			}
+			.err .status > * {
+				background: #fff;
+				color: #a00;
+				border: 1px solid #a00;
 			}
 			.pass .status > * {
 				background: #0a0;
@@ -268,6 +279,18 @@
 				<td class="channel"><div>model-editor-macos</div></td>
 				<td>There's universal binary for both <span class="arch">x86_64</span> and <span class="arch">i386</span> architectures</td>
 				<td class="comment">Universal binaries on macOS may bundle together multiple executables for different platforms in a single file. Appropriate executable is selected by OS automatically at launch time.</td>
+			</tr>
+			<tr class="wait">
+				<td class="status"><div>WAIT</div></td>
+				<td class="channel"><div>model-editor-linux</div></td>
+				<td>Anti-virus check is pending. <a href="https://virustotal.com/">Virus Total report</a></td>
+				<td class="comment">It may take up to a few hours for results of anti-virus check to appear. Feel free to return to this page later.</td>
+			</tr>
+			<tr class="err">
+				<td class="status"><div>???</div></td>
+				<td class="channel"><div>model-editor-macos</div></td>
+				<td>Anti-virus check failed for unclear reason.</td>
+				<td class="comment">This is not a problem with your package, it's something on our side.</td>
 			</tr>
 		</table>
 		<h2>Smoke tests</h2>

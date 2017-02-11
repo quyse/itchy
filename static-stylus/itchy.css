@@ -46,6 +46,7 @@ h2
 	text-align left
 
 .status > *
+	font-family sans-serif
 	font-weight bold
 	text-align center
 	padding 1px 4px
@@ -81,6 +82,14 @@ h2
 .bad .status > *
 	background #a00
 	color #fff
+.wait .status > *
+	background #fff
+	color #333
+	border 1px solid #888
+.err .status > *
+	background #fff
+	color #a00
+	border 1px solid #a00
 .pass .status > *
 	background #0a0
 	color #fff
