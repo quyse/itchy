@@ -69,6 +69,5 @@ executable itchy-runner
     , unix
     , unordered-containers
     , text
-    , vector
     , yaml
   default-language:    Haskell2010

@@ -11,12 +11,14 @@ module Itchy.Report
 	, ReportAVCheck(..)
 	, ReportUnpack(..)
 	, ReportEntry(..)
-	, ReportItchToml(..)
-	, ReportItchTomlPrereq(..)
-	, ReportItchTomlAction(..)
-	, ReportBinaries(..)
-	, ReportBinary(..)
-	, ReportMachoSubBinary(..)
+	, ReportParse(..)
+	, ItchToml(..)
+	, ItchTomlPrereq(..)
+	, ItchTomlAction(..)
+	, ReportBinaryPe(..)
+	, ReportBinaryElf(..)
+	, ReportBinaryMachO(..)
+	, ReportMachOSubBinary(..)
 	, ReportArch(..)
 	, ReportDep(..)
 	) where
@@ -32,8 +34,6 @@ data Report = Report
 	, report_download :: !ReportDownload
 	, report_avCheck :: !ReportAVCheck
 	, report_unpack :: !ReportUnpack
-	, report_itchToml :: !ReportItchToml
-	, report_binaries :: !ReportBinaries
 	} deriving Generic
 instance A.ToJSON Report where
 	toJSON = A.genericToJSON jsonOptions
@@ -70,6 +70,7 @@ data ReportEntry
 	| ReportEntry_file
 		{ reportEntry_mode :: {-# UNPACK #-} !Word32
 		, reportEntry_size :: {-# UNPACK #-} !Word64
+		, reportEntry_parses :: ![ReportParse]
 		}
 	| ReportEntry_directory
 		{ reportEntry_mode :: {-# UNPACK #-} !Word32
@@ -83,73 +84,74 @@ data ReportEntry
 instance A.ToJSON ReportEntry where
 	toJSON = A.genericToJSON jsonOptions
 
-data ReportItchToml
-	= ReportItchToml_notStarted
-	| ReportItchToml_missing
-	| ReportItchToml_failed !T.Text
-	| ReportItchToml_malformed
-	| ReportItchToml_ok
-		{ reportItchToml_prereqs :: ![ReportItchTomlPrereq]
-		, reportItchToml_actions :: ![ReportItchTomlAction]
-		}
-	| ReportItchToml_wrong
-		{ reportItchToml_error :: !T.Text
-		}
+data ReportParse
+	= ReportParse_itchToml !(Either T.Text ItchToml)
+	| ReportParse_binaryPe !ReportBinaryPe
+	| ReportParse_binaryElf !ReportBinaryElf
+	| ReportParse_binaryMachO !ReportBinaryMachO
 	deriving Generic
-instance A.ToJSON ReportItchToml where
+instance A.ToJSON ReportParse where
 	toJSON = A.genericToJSON jsonOptions
 
-data ReportItchTomlPrereq = ReportItchTomlPrereq
-	{ reportItchTomlPrereq_name :: !T.Text
+data ItchToml = ItchToml
+	{ itchToml_prereqs :: !(Maybe [ItchTomlPrereq])
+	, itchToml_actions :: [ItchTomlAction]
 	} deriving Generic
-instance A.ToJSON ReportItchTomlPrereq where
+instance A.ToJSON ItchToml where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ItchToml where
+	parseJSON = A.genericParseJSON jsonOptions
 
-data ReportItchTomlAction = ReportItchTomlAction
-	{ reportItchTomlAction_name :: !T.Text
-	, reportItchTomlAction_path :: !T.Text
-	, reportItchTomlAction_icon :: !T.Text
-	, reportItchTomlAction_scope :: !T.Text
-	, reportItchTomlAction_args :: [T.Text]
-	, reportItchTomlAction_locales :: !(HM.HashMap T.Text ReportItchTomlAction)
+data ItchTomlPrereq = ItchTomlPrereq
+	{ itchTomlPrereq_name :: !T.Text
 	} deriving Generic
-instance A.ToJSON ReportItchTomlAction where
+instance A.ToJSON ItchTomlPrereq where
+	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ItchTomlPrereq where
+	parseJSON = A.genericParseJSON jsonOptions
+
+data ItchTomlAction = ItchTomlAction
+	{ itchTomlAction_name :: !T.Text
+	, itchTomlAction_path :: !T.Text
+	, itchTomlAction_icon :: !(Maybe T.Text)
+	, itchTomlAction_scope :: !(Maybe T.Text)
+	, itchTomlAction_args :: !(Maybe [T.Text])
+	} deriving Generic
+instance A.ToJSON ItchTomlAction where
+	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ItchTomlAction where
+	parseJSON = A.genericParseJSON jsonOptions
+
+data ReportBinaryPe = ReportBinaryPe
+	{ reportBinaryPe_arch :: !ReportArch
+	, reportBinaryPe_deps :: [ReportDep]
+	} deriving Generic
+instance A.ToJSON ReportBinaryPe where
 	toJSON = A.genericToJSON jsonOptions
 
-data ReportBinaries
-	= ReportBinaries_notStarted
-	| ReportBinaries_info
-		{ reportBinaries_binaries :: !(HM.HashMap T.Text ReportBinary)
-		}
-	deriving Generic
-instance A.ToJSON ReportBinaries where
+data ReportBinaryElf = ReportBinaryElf
+	{ reportBinaryElf_arch :: !ReportArch
+	, reportBinaryElf_deps :: [ReportDep]
+	} deriving Generic
+instance A.ToJSON ReportBinaryElf where
 	toJSON = A.genericToJSON jsonOptions
 
-data ReportBinary
-	= ReportBinary_pe
-		{ reportBinary_arch :: !ReportArch
-		, reportBinary_deps :: [ReportDep]
-		}
-	| ReportBinary_elf
-		{ reportBinary_arch :: !ReportArch
-		, reportBinary_deps :: [ReportDep]
-		}
-	| ReportBinary_macho
-		{ reportBinary_binaries :: [ReportMachoSubBinary]
-		}
-	deriving Generic
-instance A.ToJSON ReportBinary where
+data ReportBinaryMachO = ReportBinaryMachO
+	{ reportBinary_binaries :: [ReportMachOSubBinary]
+	} deriving Generic
+instance A.ToJSON ReportBinaryMachO where
 	toJSON = A.genericToJSON jsonOptions
 
-data ReportMachoSubBinary = ReportMachoSubBinary
+data ReportMachOSubBinary = ReportMachOSubBinary
 	{ reportMachoSubBinary_arch :: !ReportArch
 	, reportMachoSubBinary_deps :: [ReportDep]
 	} deriving Generic
-instance A.ToJSON ReportMachoSubBinary where
+instance A.ToJSON ReportMachOSubBinary where
 	toJSON = A.genericToJSON jsonOptions
 
 data ReportArch
-	= ReportArch_x86
+	= ReportArch_unknown
+	| ReportArch_x86
 	| ReportArch_x64
 	deriving Generic
 instance A.ToJSON ReportArch where
