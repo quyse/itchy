@@ -70,6 +70,7 @@ data ReportEntry
 	| ReportEntry_file
 		{ reportEntry_mode :: {-# UNPACK #-} !Word32
 		, reportEntry_size :: {-# UNPACK #-} !Word64
+		, reportEntry_mime :: !T.Text
 		, reportEntry_parses :: ![ReportParse]
 		}
 	| ReportEntry_directory

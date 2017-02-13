@@ -144,10 +144,14 @@ run = withBook $ \bk -> do
 				status <- P.getSymbolicLinkStatus $ T.unpack path
 				let P.CMode mode = P.fileMode status
 				if P.isRegularFile status then do
-					parses <- parseFile magic name path
+					-- get type of file with libmagic
+					mime <- T.pack <$> magicFile magic (T.unpack path)
+					-- try to parse file
+					parses <- parseFile name path mime
 					return ReportEntry_file
 						{ reportEntry_mode = mode
 						, reportEntry_size = fromIntegral $ P.fileSize status
+						, reportEntry_mime = mime
 						, reportEntry_parses = parses
 						}
 				else if P.isDirectory status then do
@@ -175,11 +179,8 @@ run = withBook $ \bk -> do
 			{ report_unpack = ReportUnpack_succeeded entries
 			}
 
-parseFile :: Magic -> T.Text -> T.Text -> IO [ReportParse]
-parseFile magic name path = do
-	-- get type of file with libmagic
-	mime <- magicFile magic $ T.unpack path
-
+parseFile :: T.Text -> T.Text -> T.Text -> IO [ReportParse]
+parseFile name path mime = do
 	parsesRef <- newIORef []
 	let addParse parse = modifyIORef' parsesRef (parse :)
 
