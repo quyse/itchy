@@ -13,8 +13,10 @@ module Itchy.ItchCache
 
 import Control.Concurrent
 import Control.Concurrent.STM
+import Control.Exception
 import Control.Monad
 import Data.Int
+import qualified Data.Set as S
 import qualified Data.Serialize as S
 import qualified Data.Text as T
 import Foreign.C.Types
@@ -31,10 +33,12 @@ data ItchCache = ItchCache
 	{ itchCacheItchApi :: !ItchApi
 	, itchCacheDb :: !Lmdb
 	, itchCacheFlow :: !Flow
+	-- | In-progress refreshes.
+	, itchCacheRefreshingGamesVar :: {-# UNPACK #-} !(TVar (S.Set ItchGameId))
 	-- | Stale period in seconds.
-	, itchCacheStalePeriod :: !Int64
+	, itchCacheStalePeriod :: {-# UNPACK #-} !Int64
 	-- | Delay between API requests in microseconds.
-	, itchCacheApiCooldown :: !Int
+	, itchCacheApiCooldown :: {-# UNPACK #-} !Int
 	}
 
 -- | Database key.
@@ -73,10 +77,12 @@ newItchCache :: ItchApi -> T.Text -> Int64 -> Int -> IO (ItchCache, IO ())
 newItchCache itchApi dbFileName stalePeriod apiCooldown = withSpecialBook $ \bk -> do
 	db <- book bk $ lmdbOpen dbFileName (1024 * 1024 * 1024)
 	flow <- book bk newFlow
+	refreshingGamesVar <- newTVarIO S.empty
 	return ItchCache
 		{ itchCacheItchApi = itchApi
 		, itchCacheDb = db
 		, itchCacheFlow = flow
+		, itchCacheRefreshingGamesVar = refreshingGamesVar
 		, itchCacheStalePeriod = stalePeriod
 		, itchCacheApiCooldown = apiCooldown
 		}
@@ -147,30 +153,36 @@ itchCacheGetGame cache gameId = do
 itchCacheRefreshGame :: ItchCache -> ItchGameId -> IO ()
 itchCacheRefreshGame cache@ItchCache
 	{ itchCacheItchApi = itchApi
+	, itchCacheRefreshingGamesVar = refreshingGamesVar
 	, itchCacheApiCooldown = apiCooldown
-	} gameId = itchCacheOperation cache $ do
-	eitherUpdatedItchGame <- itchGetGame itchApi gameId
-	CTime currentTime <- epochTime
-	updatedGame <- case eitherUpdatedItchGame of
-		Right updatedItchGame -> do
-			-- delay
-			threadDelay apiCooldown
-			-- get uploads
-			updatedUploads <- (either (const []) id) <$> itchGetGameUploads itchApi gameId Nothing
-			-- save uploads in cache
-			forM_ updatedUploads $ \upload@ItchUpload
-				{ itchUpload_id = uploadId
-				} -> itchCachePut CacheKeyUpload cache uploadId CachedUpload
-				{ upload_maybeItchUpload = Just upload
-				, upload_updated = currentTime
-				}
-			return CachedGame
-				{ game_maybeItchGameWithUploads = Just (updatedItchGame, map itchUpload_id updatedUploads)
-				, game_updated = currentTime
-				}
-		Left _ -> return CachedGame
-			{ game_maybeItchGameWithUploads = Nothing
-			, game_updated = currentTime
-			}
-	-- save game in cache
-	itchCachePut CacheKeyGame cache gameId updatedGame
+	} gameId = join $ atomically $ do
+	isRefreshing <- S.member gameId <$> readTVar refreshingGamesVar
+	if isRefreshing then return $ return ()
+	else do
+		modifyTVar' refreshingGamesVar $ S.insert gameId
+		return $ itchCacheOperation cache $ flip finally (atomically $ modifyTVar' refreshingGamesVar $ S.delete gameId) $ do
+			eitherUpdatedItchGame <- itchGetGame itchApi gameId
+			CTime currentTime <- epochTime
+			updatedGame <- case eitherUpdatedItchGame of
+				Right updatedItchGame -> do
+					-- delay
+					threadDelay apiCooldown
+					-- get uploads
+					updatedUploads <- (either (const []) id) <$> itchGetGameUploads itchApi gameId Nothing
+					-- save uploads in cache
+					forM_ updatedUploads $ \upload@ItchUpload
+						{ itchUpload_id = uploadId
+						} -> itchCachePut CacheKeyUpload cache uploadId CachedUpload
+						{ upload_maybeItchUpload = Just upload
+						, upload_updated = currentTime
+						}
+					return CachedGame
+						{ game_maybeItchGameWithUploads = Just (updatedItchGame, map itchUpload_id updatedUploads)
+						, game_updated = currentTime
+						}
+				Left _ -> return CachedGame
+					{ game_maybeItchGameWithUploads = Nothing
+					, game_updated = currentTime
+					}
+			-- save game in cache
+			itchCachePut CacheKeyGame cache gameId updatedGame

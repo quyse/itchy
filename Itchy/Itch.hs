@@ -174,7 +174,7 @@ instance A.FromJSON ItchUrlResponse where
 		{ A.fieldLabelModifier = drop 16
 		}
 
-newtype ItchGameId = ItchGameId Word64 deriving (Generic, Show, S.Serialize, A.FromJSON)
+newtype ItchGameId = ItchGameId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON)
 data ItchGame = ItchGame
 	{ itchGame_id :: !ItchGameId
 	, itchGame_title :: !T.Text
@@ -198,7 +198,7 @@ instance A.FromJSON ItchGame where
 		{ A.fieldLabelModifier = drop 9
 		}
 
-newtype ItchUploadId = ItchUploadId Word64 deriving (Generic, Show, S.Serialize, A.FromJSON)
+newtype ItchUploadId = ItchUploadId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON)
 data ItchUpload = ItchUpload
 	{ itchUpload_id :: !ItchUploadId
 	, itchUpload_display_name :: !(Maybe T.Text)
@@ -218,4 +218,4 @@ instance A.FromJSON ItchUpload where
 		{ A.fieldLabelModifier = drop 11
 		}
 
-newtype ItchDownloadKeyId = ItchDownloadKeyId Word64 deriving (Generic, Show, S.Serialize, A.FromJSON)
+newtype ItchDownloadKeyId = ItchDownloadKeyId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON)
