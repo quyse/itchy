@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>itch.io as Pacman Repository</title>
+		<link rel="stylesheet" href="styles.css" />
+	</head>
+	<body>
+		<h1>itch.io as Pacman Repository</h1>
+		<p>itch-db provides a special hacky pacman repository for those who don't want to use official itch app for some reason.</p>
+		<p>Advantages of using itchy-repo:</p>
+		<ul>
+			<li>All operations (install, upgrade) are done via standard <code>pacman</code> commands.
+			<li>Desktop entries are automatically added for games' executables.
+		</ul>
+		<p>Disadvantages of using itchy-repo:</p>
+		<ul>
+			<li>Itch app is more efficient in binary patching.
+			<li>Itch app doesn't require root privileges.
+			<li>Installs from itch app are per-user rather than per-system, so multiple users may coexist.
+			<li>Itch app provides updates faster as it talks straight to the itch.io backend, but for pacman we need to repack itch.io uploads as pacman packages, so the repo may be a bit behind.
+		</ul>
+		<h2>Installaction</h2>
+		<p>Get your itch.io API key, it's listed on your <a href="https://itch.io/user/settings/api-keys">API keys</a> page.</p>
+		<p>Add the following to your <code>/etc/pacman/pacman.conf</code> file (replace <code>ITCHIOAPIKEY</code> with your key):</p>
+		<pre>
+[itch.io-paid]
+Server = https://itchy-db.io/repo/archlinux/paid/ITCHIOAPIKEY/$arch
+[itch.io-free]
+Server = https://itchy-db.io/repo/archlinux/free/$arch
+</pre>
+		<p>Then run <code>sudo pacman -Sy</code> as usual, and you're ready to install games! It's recommended to run <code>sudo pkgfile --update</code> in order to update <code>pkgfile</code> database and have proper bash completion support.</p>
+		<h2>Packages</h2>
+		<p>If you see a game at <code>https://AUTHOR.itch.io/GAME</code>, in most cases you can install it immediately simply by typing:
+		<pre>sudo pacman -S itchio-AUTHOR-GAME</pre>
+		<p>The package <code>itchio-AUTHOR-GAME</code> is a virtual package. Actual content is always in packages corresponding to a specific itch.io upload, which name is <code>itchio-AUTHOR-GAME-UPLOADID</code> where <code>UPLOADID</code> is an internal numeric upload id. "Upload" package may "provide" following virtual packages:</p>
+		<ul>
+			<li><code>itchio-AUTHOR-GAME</code> - normal full game build, paid if game is paid, free if game is free, but never demo.
+			<li><code>itchio-AUTHOR-GAME-demo</code> - demo if game has one.
+		</ul>
+		<p>Package installs the following files:</p>
+		<ul>
+			<li>Main game content gets installed into <code>/usr/local/games/itch.io/AUTHOR/GAME/UPLOADID/</code>.
+			<li>Desktop entry file gets installed into <code>/usr/local/share/applications/</code> under name <code>itchio-AUTHOR-GAME-UPLOADID.desktop</code>.
+		</ul>
+		<p>System may try to detect usual dependencies such as <code>libstdc++</code> or <code>libgl</code>, and make package depend on them.</p>
+	</body>
+</html>

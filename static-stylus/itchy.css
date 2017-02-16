@@ -13,8 +13,11 @@ td
 	border-collapse collapse
 	vertical-align top
 	padding 1px 5px
-trfirst-child
-	background #f0f0f0
+tr
+	&:first-child
+		background #f0f0f0
+	&:hover
+		background #e0e0e0
 
 .header
 	& > a
@@ -102,6 +105,9 @@ a
 		text-decoration none
 		border-bottom 1px dashed #00f
 .file
+	font-family monospace
+	white-space pre
+.filemode
 	font-family monospace
 .category
 	border-top 1px dashed #ccc

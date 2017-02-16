@@ -1,0 +1,109 @@
+body {
+	background: #fff;
+	color: #222;
+	font-family: serif;
+	padding: 10px 20px;
+}
+table {
+	border-collapse: collapse;
+	border: 1px dashed #ccc;
+	background: #fcfcfc;
+}
+td {
+	border-top: 1px dashed #ccc;
+	border-bottom: 1px dashed #ccc;
+	border-collapse: collapse;
+	vertical-align: top;
+	padding: 1px 5px;
+}
+tr:first-child {
+	background: #f0f0f0;
+}
+code, pre {
+	font-weight: bold;
+}
+.status > * {
+	font-family: sans-serif;
+	font-weight: bold;
+	text-align: center;
+	padding: 1px 4px;
+	margin: 1px 2px;
+	border-radius: 3px;
+}
+.channel > * {
+	font-family: monospace;
+	font-weight: bold;
+	text-align: left;
+	white-space: nowrap;
+	padding: 1px 4px;
+}
+.tag {
+	font-family: monospace;
+	font-weight: bold;
+	background: #222;
+	color: #fff;
+	padding: 1px;
+	border-radius: 3px;
+}
+.arch {
+	font-family: monospace;
+	font-weight: bold;
+}
+.ok .status > * {
+	background: #0a0;
+	color: #fff;
+}
+.info .status > * {
+	background: #fff;
+	color: #333;
+	border: 1px solid #888;
+}
+.tip .status > * {
+	background: #44f;
+	color: #fff;
+}
+.warn .status > * {
+	background: #c80;
+	color: #fff;
+}
+.bad .status > * {
+	background: #a00;
+	color: #fff;
+}
+.wait .status > * {
+	background: #fff;
+	color: #333;
+	border: 1px solid #888;
+}
+.err .status > * {
+	background: #fff;
+	color: #a00;
+	border: 1px solid #a00;
+}
+.pass .status > * {
+	background: #0a0;
+	color: #fff;
+}
+.fail .status > * {
+	background: #a00;
+	color: #fff;
+}
+a {
+	color: #00f;
+}
+a.rollup {
+	text-decoration: none;
+	border-bottom: 1px dashed #00f;
+}
+.name {
+}
+.file {
+	font-family: monospace;
+}
+.category {
+	border-top: 1px dashed #ccc;
+	border-bottom: 1px dashed #ccc;
+	text-align: center;
+	vertical-align: middle;
+	font-weight: bold;
+}
