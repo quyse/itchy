@@ -5,6 +5,7 @@ module Main(main) where
 import Control.Exception
 import Data.Monoid
 import qualified Data.Aeson.Types as A
+import Data.Int
 import Data.String
 import qualified Data.Text as T
 import qualified Data.Yaml as Y
@@ -19,9 +20,9 @@ import qualified Options.Applicative as O
 import qualified Wai.Routes as W
 
 import Flaw.Book
-import Flaw.Data.Sqlite
 
 import Itchy.Itch
+import Itchy.ItchCache
 import Itchy.Routes
 import Itchy.Static
 
@@ -53,6 +54,8 @@ data Config = Config
 	, config_gitlabTriggerToken :: !T.Text
 	, config_gitlabTriggerRef :: !T.Text
 	, config_itchToken :: !T.Text
+	, config_itchApiCooldown :: !Int
+	, config_cacheStalePeriod :: !Int64
 	} deriving Generic
 
 instance A.FromJSON Config where
@@ -72,13 +75,14 @@ run Options
 		, config_port = port
 		, config_dbFileName = dbFileName
 		, config_itchToken = itchToken
+		, config_itchApiCooldown = itchApiCooldown
+		, config_cacheStalePeriod = cacheStalePeriod
 		} <- case eitherConfig of
 		Right config -> return config
 		Left err -> throwIO err
 
-	db <- book bk $ sqliteDb dbFileName
-
 	itchApi <- book bk $ newItchApi httpManager itchToken
+	itchCache <- book bk $ newItchCache itchApi dbFileName cacheStalePeriod itchApiCooldown
 
 	logger <- W.mkRequestLogger $ W.def
 		{ W.outputFormat = W.Detailed True
@@ -93,6 +97,7 @@ run Options
 		} $ logger $ W.autohead $ W.waiApp $ do
 		W.route App
 			{ appItchApi = itchApi
+			, appItchCache = itchCache
 			}
 		W.catchall $ W.staticApp staticSettings
 

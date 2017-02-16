@@ -18,6 +18,7 @@ import qualified Data.Serialize as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
+import Data.Word
 import qualified Network.HTTP.Types as HT
 import Numeric
 import Text.Blaze.Html5 as H
@@ -27,18 +28,20 @@ import qualified Wai.Routes as W
 import qualified Web.Cookie as W
 
 import Itchy.Itch
+import Itchy.ItchCache
 import Itchy.Static
 
 data App = App
 	{ appItchApi :: !ItchApi
+	, appItchCache :: !ItchCache
 	}
 
 W.mkRoute "App" [W.parseRoutes|
 / DashboardR GET
 /reports ReportsR GET
 /games GamesR GET
-/game/#Int GameR GET
-/upload/#Int UploadR GET
+/game/#Word64 GameR GET
+/upload/#Word64 UploadR GET
 /auth AuthR POST
 |]
 
@@ -57,94 +60,94 @@ getGamesR = W.runHandlerM $ do
 	page "Games" [("Dashboard", DashboardR), ("Games", GamesR)] $ do
 		mempty
 
-getGameR :: Int -> W.Handler App
+getGameR :: Word64 -> W.Handler App
 getGameR gameId = W.runHandlerM $ do
 	App
-		{ appItchApi = itchApi
+		{ appItchCache = itchCache
 		} <- W.sub
 	showRoute <- W.showRouteSub
 
-	-- get game info
-	ItchGame
-		{ itchGame_title = gameTitle
-		, itchGame_cover_url = maybeGameCoverUrl
-		, itchGame_user = ItchUser
-			{ itchUser_username = creatorUserName
-			}
-		, itchGame_can_be_bought = gameCanBeBought
-		, itchGame_in_press_system = gameInPressSystem
-		, itchGame_short_text = fromMaybe "" -> gameShortText
-		, itchGame_has_demo = gameHasDemo
-		, itchGame_min_price = ((* (0.01 :: Float)) . fromIntegral) -> gameMinPrice
-		, itchGame_p_windows = gameWindows
-		, itchGame_p_linux = gameLinux
-		, itchGame_p_osx = gameMacOS
-		, itchGame_p_android = gameAndroid
-		} <- liftIO $ itchGame itchApi gameId
+	maybeGameWithUploads <- liftIO $ itchCacheGetGame itchCache (ItchGameId gameId)
 
-	-- get game uploads
-	maybeDownloadKeyId <- W.getParam "downloadKey"
-	gameUploads <- liftIO $ itchGameUploads itchApi gameId (read . T.unpack <$> maybeDownloadKeyId)
+	case maybeGameWithUploads of
+		Just (ItchGame
+			{ itchGame_title = gameTitle
+			, itchGame_cover_url = maybeGameCoverUrl
+			, itchGame_user = ItchUser
+				{ itchUser_username = creatorUserName
+				}
+			, itchGame_can_be_bought = gameCanBeBought
+			, itchGame_in_press_system = gameInPressSystem
+			, itchGame_short_text = fromMaybe "" -> gameShortText
+			, itchGame_has_demo = gameHasDemo
+			, itchGame_min_price = ((* (0.01 :: Float)) . fromIntegral) -> gameMinPrice
+			, itchGame_p_windows = gameWindows
+			, itchGame_p_linux = gameLinux
+			, itchGame_p_osx = gameMacOS
+			, itchGame_p_android = gameAndroid
+			}, gameUploads) -> do
+			let gameByAuthor = gameTitle <> " by " <> creatorUserName
+			page gameByAuthor [("Dashboard", DashboardR), ("Games", GamesR), (gameByAuthor, GameR gameId)] $ H.div ! class_ "game_info" $ do
+				case maybeGameCoverUrl of
+					Just coverUrl -> img ! class_ "cover" ! src (toValue coverUrl)
+					Nothing -> mempty
+				p $ toHtml gameShortText
+				p $ "Platforms: "
+					<> (if gameWindows then H.span ! class_ "tag" $ "windows" else mempty)
+					<> (if gameLinux then H.span ! class_ "tag" $ "linux" else mempty)
+					<> (if gameMacOS then H.span ! class_ "tag" $ "macos" else mempty)
+					<> (if gameAndroid then H.span ! class_ "tag" $ "android" else mempty)
+				p $ if gameHasDemo then "Has demo" else "No demo"
+				p $
+					if gameCanBeBought then
+						if gameMinPrice <= 0 then "Free, donations allowed"
+						else "Minimum price $" <> toHtml (T.pack $ show gameMinPrice)
+					else "Free, payments disabled"
+				p $ if gameInPressSystem then "Opted into itch.io press system" else "Did not opted into itch.io press system"
+				h2 "Uploads"
+				table $ do
+					tr $ do
+						th "Display name"
+						th "File name"
+						th "Size"
+						th "Tags"
+					forM_ gameUploads $ \ItchUpload
+						{ itchUpload_id = ItchUploadId uploadId
+						, itchUpload_display_name = fromMaybe "" -> uploadDisplayName
+						, itchUpload_filename = uploadFileName
+						, itchUpload_demo = uploadDemo
+						, itchUpload_preorder = uploadPreorder
+						, itchUpload_size = uploadSize
+						, itchUpload_p_windows = uploadWindows
+						, itchUpload_p_linux = uploadLinux
+						, itchUpload_p_osx = uploadMacOS
+						, itchUpload_p_android = uploadAndroid
+						} -> H.tr ! class_ "upload" $ do
+						H.td ! class_ "name" $ a ! href (toValue $ showRoute $ UploadR uploadId) $ toHtml uploadDisplayName
+						H.td ! class_ "filename" $ toHtml uploadFileName
+						H.td $
+							if uploadSize < 2 * 1024 then toHtml (show uploadSize) <> " b"
+							else if uploadSize < 2 * 1024 * 1024 then toHtml (showFFloat (Just 1) (fromIntegral uploadSize / 1024 :: Float) "") <> " Kb"
+							else if uploadSize < 2 * 1024 * 1024 * 1024 then toHtml (showFFloat (Just 1) (fromIntegral uploadSize / (1024 * 1024) :: Float) "") <> " Mb"
+							else toHtml (showFFloat (Just 1) (fromIntegral uploadSize / (1024 * 1024 * 1024) :: Float) "") <> " Gb"
+						H.td $ do
+							if uploadWindows then H.span ! class_ "tag" $ "windows" else mempty
+							if uploadLinux then H.span ! class_ "tag" $ "linux" else mempty
+							if uploadMacOS then H.span ! class_ "tag" $ "macos" else mempty
+							if uploadAndroid then H.span ! class_ "tag" $ "android" else mempty
+							if uploadDemo then H.span ! class_ "tag" $ "demo" else mempty
+							if uploadPreorder then H.span ! class_ "tag" $ "preorder" else mempty
+		Nothing -> do
+			let gameByAuthor = "unknown"
+			page gameByAuthor [("Dashboard", DashboardR), ("Games", GamesR), (gameByAuthor, GameR gameId)] $ H.p "Information about this game is not cached yet."
 
-	let gameByAuthor = gameTitle <> " by " <> creatorUserName
-	page gameByAuthor [("Dashboard", DashboardR), ("Games", GamesR), (gameByAuthor, GameR gameId)] $ H.div ! class_ "game_info" $ do
-		case maybeGameCoverUrl of
-			Just coverUrl -> img ! class_ "cover" ! src (toValue coverUrl)
-			Nothing -> mempty
-		p $ toHtml gameShortText
-		p $ "Platforms: "
-			<> (if gameWindows then H.span ! class_ "tag" $ "windows" else mempty)
-			<> (if gameLinux then H.span ! class_ "tag" $ "linux" else mempty)
-			<> (if gameMacOS then H.span ! class_ "tag" $ "macos" else mempty)
-			<> (if gameAndroid then H.span ! class_ "tag" $ "android" else mempty)
-		p $ if gameHasDemo then "Has demo" else "No demo"
-		p $
-			if gameCanBeBought then
-				if gameMinPrice <= 0 then "Free, donations allowed"
-				else "Minimum price $" <> toHtml (T.pack $ show gameMinPrice)
-			else "Free, payments disabled"
-		p $ if gameInPressSystem then "Opted into itch.io press system" else "Did not opted into itch.io press system"
-		h2 "Uploads"
-		table $ do
-			tr $ do
-				th "Display name"
-				th "File name"
-				th "Size"
-				th "Tags"
-			forM_ gameUploads $ \ItchUpload
-				{ itchUpload_id = uploadId
-				, itchUpload_display_name = fromMaybe "" -> uploadDisplayName
-				, itchUpload_filename = uploadFileName
-				, itchUpload_demo = uploadDemo
-				, itchUpload_preorder = uploadPreorder
-				, itchUpload_size = uploadSize
-				, itchUpload_p_windows = uploadWindows
-				, itchUpload_p_linux = uploadLinux
-				, itchUpload_p_osx = uploadMacOS
-				, itchUpload_p_android = uploadAndroid
-				} -> H.tr ! class_ "upload" $ do
-					H.td ! class_ "name" $ a ! href (toValue $ showRoute $ UploadR uploadId) $ toHtml uploadDisplayName
-					H.td ! class_ "filename" $ toHtml uploadFileName
-					H.td $
-						if uploadSize < 2 * 1024 then toHtml (show uploadSize) <> " b"
-						else if uploadSize < 2 * 1024 * 1024 then toHtml (showFFloat (Just 1) (fromIntegral uploadSize / 1024 :: Float) "") <> " Kb"
-						else if uploadSize < 2 * 1024 * 1024 * 1024 then toHtml (showFFloat (Just 1) (fromIntegral uploadSize / (1024 * 1024) :: Float) "") <> " Mb"
-						else toHtml (showFFloat (Just 1) (fromIntegral uploadSize / (1024 * 1024 * 1024) :: Float) "") <> " Gb"
-					H.td $ do
-						if uploadWindows then H.span ! class_ "tag" $ "windows" else mempty
-						if uploadLinux then H.span ! class_ "tag" $ "linux" else mempty
-						if uploadMacOS then H.span ! class_ "tag" $ "macos" else mempty
-						if uploadAndroid then H.span ! class_ "tag" $ "android" else mempty
-						if uploadDemo then H.span ! class_ "tag" $ "demo" else mempty
-						if uploadPreorder then H.span ! class_ "tag" $ "preorder" else mempty
-
-getUploadR :: Int -> W.Handler App
-getUploadR uploadId = W.runHandlerM $ do
+getUploadR :: Word64 -> W.Handler App
+getUploadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
 	App
 		{ appItchApi = itchApi
 		} <- W.sub
 	maybeDownloadKeyId <- W.getParam "downloadKey"
-	url <- liftIO $ itchDownloadUpload itchApi uploadId (read . T.unpack <$> maybeDownloadKeyId)
+	url <- liftIO $ itchDownloadUpload itchApi uploadId (ItchDownloadKeyId . read . T.unpack <$> maybeDownloadKeyId)
 	W.header "Location" $ T.encodeUtf8 url
 	W.status HT.seeOther303
 

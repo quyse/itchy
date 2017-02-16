@@ -7,7 +7,7 @@ import Control.Exception
 import Control.Monad
 import qualified Data.Aeson as A
 import qualified Data.ByteString as B
-import qualified Data.HashMap.Strict as HM
+import qualified Data.Map.Strict as M
 import Data.IORef
 import Data.Monoid
 import qualified Data.Serialize as S
@@ -79,7 +79,7 @@ run = withBook $ \bk -> do
 	uploadFileName <- E.getEnv "ITCHIO_UPLOAD_FILENAME"
 
 	-- download if needed
-	maybeUploadId <- (read <$>) <$> E.lookupEnv "ITCHIO_UPLOAD_ID"
+	maybeUploadId <- (ItchUploadId . read <$>) <$> E.lookupEnv "ITCHIO_UPLOAD_ID"
 	case maybeUploadId of
 		Just uploadId -> handleReport (\e r -> r
 			{ report_download = ReportDownload_failed e
@@ -92,7 +92,7 @@ run = withBook $ \bk -> do
 			itchApi <- book bk $ newItchApi httpManager itchToken
 
 			-- try to get download key id
-			maybeDownloadKeyId <- (read <$>) <$> E.lookupEnv "ITCHIO_DOWNLOAD_KEY_ID"
+			maybeDownloadKeyId <- (ItchDownloadKeyId . read <$>) <$> E.lookupEnv "ITCHIO_DOWNLOAD_KEY_ID"
 
 			-- get download url
 			url <- itchDownloadUpload itchApi uploadId maybeDownloadKeyId
@@ -171,7 +171,7 @@ run = withBook $ \bk -> do
 					}
 			parseSubEntries path = do
 				subNames <- D.listDirectory $ T.unpack path
-				HM.fromList <$> forM subNames (\(T.pack -> subName) -> (subName, ) <$> parseEntry subName (path <> "/" <> subName))
+				M.fromList <$> forM subNames (\(T.pack -> subName) -> (subName, ) <$> parseEntry subName (path <> "/" <> subName))
 
 		entries <- parseSubEntries WORK_DIR
 

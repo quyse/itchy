@@ -7,5 +7,5 @@ packages:
 - location: deps/flaw
   subdirs:
   - flaw-base
-  - flaw-sqlite
+  - flaw-lmdb
   extra-dep: true

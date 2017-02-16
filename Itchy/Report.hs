@@ -24,7 +24,7 @@ module Itchy.Report
 	) where
 
 import qualified Data.Aeson.Types as A
-import qualified Data.HashMap.Strict as HM
+import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import Data.Word
 import GHC.Generics(Generic)
@@ -37,6 +37,8 @@ data Report = Report
 	} deriving Generic
 instance A.ToJSON Report where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON Report where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportDownload
 	= ReportDownload_notStarted
@@ -46,6 +48,8 @@ data ReportDownload
 	deriving Generic
 instance A.ToJSON ReportDownload where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportDownload where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportAVCheck
 	= ReportAVCheck_notStarted
@@ -54,14 +58,18 @@ data ReportAVCheck
 	deriving Generic
 instance A.ToJSON ReportAVCheck where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportAVCheck where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportUnpack
 	= ReportUnpack_notStarted
-	| ReportUnpack_succeeded !(HM.HashMap T.Text ReportEntry)
+	| ReportUnpack_succeeded !(M.Map T.Text ReportEntry)
 	| ReportUnpack_failed !T.Text
 	deriving Generic
 instance A.ToJSON ReportUnpack where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportUnpack where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportEntry
 	= ReportEntry_unknown
@@ -75,7 +83,7 @@ data ReportEntry
 		}
 	| ReportEntry_directory
 		{ reportEntry_mode :: {-# UNPACK #-} !Word32
-		, reportEntry_entries :: !(HM.HashMap T.Text ReportEntry)
+		, reportEntry_entries :: !(M.Map T.Text ReportEntry)
 		}
 	| ReportEntry_symlink
 		{ reportEntry_mode :: {-# UNPACK #-} !Word32
@@ -84,6 +92,8 @@ data ReportEntry
 	deriving Generic
 instance A.ToJSON ReportEntry where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportEntry where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportParse
 	= ReportParse_itchToml !(Either T.Text ItchToml)
@@ -93,6 +103,8 @@ data ReportParse
 	deriving Generic
 instance A.ToJSON ReportParse where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportParse where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ItchToml = ItchToml
 	{ itchToml_prereqs :: !(Maybe [ItchTomlPrereq])
@@ -129,6 +141,8 @@ data ReportBinaryPe = ReportBinaryPe
 	} deriving Generic
 instance A.ToJSON ReportBinaryPe where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportBinaryPe where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportBinaryElf = ReportBinaryElf
 	{ reportBinaryElf_arch :: !ReportArch
@@ -136,12 +150,16 @@ data ReportBinaryElf = ReportBinaryElf
 	} deriving Generic
 instance A.ToJSON ReportBinaryElf where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportBinaryElf where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportBinaryMachO = ReportBinaryMachO
 	{ reportBinary_binaries :: [ReportMachOSubBinary]
 	} deriving Generic
 instance A.ToJSON ReportBinaryMachO where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportBinaryMachO where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportMachOSubBinary = ReportMachOSubBinary
 	{ reportMachoSubBinary_arch :: !ReportArch
@@ -149,6 +167,8 @@ data ReportMachOSubBinary = ReportMachOSubBinary
 	} deriving Generic
 instance A.ToJSON ReportMachOSubBinary where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportMachOSubBinary where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportArch
 	= ReportArch_unknown
@@ -157,6 +177,8 @@ data ReportArch
 	deriving Generic
 instance A.ToJSON ReportArch where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportArch where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportDep = ReportDep
 	{ reportDep_name :: !T.Text
@@ -164,6 +186,8 @@ data ReportDep = ReportDep
 	} deriving Generic
 instance A.ToJSON ReportDep where
 	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportDep where
+	parseJSON = A.genericParseJSON jsonOptions
 
 jsonOptions :: A.Options
 jsonOptions = A.defaultOptions
