@@ -9,6 +9,9 @@ module Itchy.ItchCache
 	( ItchCache()
 	, newItchCache
 	, itchCacheGetGame
+	, itchCacheGetUpload
+	, itchCacheGetReport
+	, itchCachePutReport
 	) where
 
 import Control.Concurrent
@@ -28,6 +31,7 @@ import Flaw.Data.Lmdb
 import Flaw.Flow
 
 import Itchy.Itch
+import Itchy.Report
 
 data ItchCache = ItchCache
 	{ itchCacheItchApi :: !ItchApi
@@ -45,6 +49,7 @@ data ItchCache = ItchCache
 data CacheKey
 	= CacheKeyGame {-# UNPACK #-} !ItchGameId
 	| CacheKeyUpload {-# UNPACK #-} !ItchUploadId
+	| CacheKeyReport {-# UNPACK #-} !ItchUploadId
 
 instance S.Serialize CacheKey where
 	put = \case
@@ -54,11 +59,15 @@ instance S.Serialize CacheKey where
 		CacheKeyUpload (ItchUploadId uploadId) -> do
 			S.putWord8 1
 			S.putWord64le uploadId
+		CacheKeyReport (ItchUploadId uploadId) -> do
+			S.putWord8 2
+			S.putWord64le uploadId
 	get = do
 		t <- S.getWord8
 		case t of
 			0 -> CacheKeyGame . ItchGameId <$> S.getWord64le
 			1 -> CacheKeyUpload . ItchUploadId <$> S.getWord64le
+			2 -> CacheKeyReport . ItchUploadId <$> S.getWord64le
 			_ -> fail "wrong key type"
 
 data CachedGame = CachedGame
@@ -186,3 +195,14 @@ itchCacheRefreshGame cache@ItchCache
 					}
 			-- save game in cache
 			itchCachePut CacheKeyGame cache gameId updatedGame
+
+itchCacheGetUpload :: ItchCache -> ItchUploadId -> IO (Maybe ItchUpload)
+itchCacheGetUpload cache uploadId = do
+	maybeCachedUpload <- itchCacheGet CacheKeyUpload cache uploadId
+	return $ maybeCachedUpload >>= upload_maybeItchUpload
+
+itchCacheGetReport :: ItchCache -> ItchUploadId -> IO (Maybe Report)
+itchCacheGetReport = itchCacheGet CacheKeyReport
+
+itchCachePutReport :: ItchCache -> ItchUploadId -> Report -> IO ()
+itchCachePutReport = itchCachePut CacheKeyReport

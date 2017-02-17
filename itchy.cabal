@@ -17,6 +17,8 @@ executable itchyd
   other-modules:
     Itchy.Itch
     Itchy.ItchCache
+    Itchy.ItchInvestigator
+    Itchy.Report
     Itchy.Routes
     Itchy.Static
   build-depends:
@@ -69,6 +71,7 @@ executable itchy-runner
     , http-client-tls
     , http-types
     , magic
+    , optparse-applicative
     , process
     , unix
     , text

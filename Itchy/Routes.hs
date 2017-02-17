@@ -27,6 +27,7 @@ import qualified Text.Blaze.Html.Renderer.Text as H(renderHtml)
 import qualified Wai.Routes as W
 import qualified Web.Cookie as W
 
+import Itchy.ItchInvestigator
 import Itchy.Itch
 import Itchy.ItchCache
 import Itchy.Static
@@ -34,6 +35,7 @@ import Itchy.Static
 data App = App
 	{ appItchApi :: !ItchApi
 	, appItchCache :: !ItchCache
+	, appItchInvestigator :: !ItchInvestigator
 	}
 
 W.mkRoute "App" [W.parseRoutes|
@@ -42,6 +44,7 @@ W.mkRoute "App" [W.parseRoutes|
 /games GamesR GET
 /game/#Word64 GameR GET
 /upload/#Word64 UploadR GET
+/investigateUpload/#Word64 InvestigateUploadR POST
 /auth AuthR POST
 |]
 
@@ -150,6 +153,21 @@ getUploadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
 	url <- liftIO $ itchDownloadUpload itchApi uploadId (ItchDownloadKeyId . read . T.unpack <$> maybeDownloadKeyId)
 	W.header "Location" $ T.encodeUtf8 url
 	W.status HT.seeOther303
+
+postInvestigateUploadR :: Word64 -> W.Handler App
+postInvestigateUploadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
+	App
+		{ appItchCache = itchCache
+		, appItchInvestigator = itchInvestigator
+		} <- W.sub
+	maybeUpload <- liftIO $ itchCacheGetUpload itchCache uploadId
+	case maybeUpload of
+		Just ItchUpload
+			{ itchUpload_filename = uploadFileName
+			} -> do
+			liftIO $ investigateItchUpload itchInvestigator uploadId uploadFileName $ itchCachePutReport itchCache uploadId
+			W.status HT.noContent204
+		Nothing -> W.status HT.notFound404
 
 postAuthR :: W.Handler App
 postAuthR = W.runHandlerM $ do

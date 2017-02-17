@@ -23,6 +23,7 @@ import Flaw.Book
 
 import Itchy.Itch
 import Itchy.ItchCache
+import Itchy.ItchInvestigator
 import Itchy.Routes
 import Itchy.Static
 
@@ -53,7 +54,7 @@ data Config = Config
 	, config_gitlabProjectId :: !T.Text
 	, config_gitlabTriggerToken :: !T.Text
 	, config_gitlabTriggerRef :: !T.Text
-	, config_itchToken :: !T.Text
+	, config_itchApiKey :: !T.Text
 	, config_itchApiCooldown :: !Int
 	, config_cacheStalePeriod :: !Int64
 	} deriving Generic
@@ -74,15 +75,16 @@ run Options
 		{ config_host = host
 		, config_port = port
 		, config_dbFileName = dbFileName
-		, config_itchToken = itchToken
+		, config_itchApiKey = itchApiKey
 		, config_itchApiCooldown = itchApiCooldown
 		, config_cacheStalePeriod = cacheStalePeriod
 		} <- case eitherConfig of
 		Right config -> return config
 		Left err -> throwIO err
 
-	itchApi <- book bk $ newItchApi httpManager itchToken
+	itchApi <- book bk $ newItchApi httpManager itchApiKey
 	itchCache <- book bk $ newItchCache itchApi dbFileName cacheStalePeriod itchApiCooldown
+	itchInvestigator <- book bk $ newItchInvestigator itchApiKey
 
 	logger <- W.mkRequestLogger $ W.def
 		{ W.outputFormat = W.Detailed True
@@ -98,6 +100,7 @@ run Options
 		W.route App
 			{ appItchApi = itchApi
 			, appItchCache = itchCache
+			, appItchInvestigator = itchInvestigator
 			}
 		W.catchall $ W.staticApp staticSettings
 

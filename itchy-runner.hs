@@ -1,5 +1,4 @@
-{-# LANGUAGE LambdaCase, OverloadedStrings, PatternSynonyms, TupleSections, ViewPatterns #-}
-{-# OPTIONS_GHC -fno-warn-missing-pattern-synonym-signatures #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings, TupleSections, ViewPatterns #-}
 
 module Main(main) where
 
@@ -9,15 +8,17 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString as B
 import qualified Data.Map.Strict as M
 import Data.IORef
+import Data.Maybe
 import Data.Monoid
 import qualified Data.Serialize as S
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO as T
+import Data.Word
 import qualified Data.Yaml as Y
 import Magic
 import qualified Network.HTTP.Client as H
 import qualified Network.HTTP.Client.TLS as H
+import qualified Options.Applicative as O
 import qualified System.Directory as D
 import qualified System.Environment as E
 import System.Exit
@@ -55,68 +56,130 @@ handleReport h io = io `catches`
 	, Handler $ \(SomeException e) -> reportError $ h $ T.pack $ show e
 	]
 
-handleIsolatedReport :: (T.Text -> Report -> Report) -> IO () -> IO ()
-handleIsolatedReport h io = io `catches`
-	[ Handler $ \ReportedError -> return ()
-	, Handler $ \(SomeException e) -> reportError $ h $ T.pack $ show e
-	]
-
 data ReportedError = ReportedError deriving Show
 instance Exception ReportedError
 
+data Options = Options
+	{ optionsUploadFileName :: !String
+	, optionsUploadId :: {-# UNPACK #-} !Word64
+	, optionsApiKey :: !String
+	, optionsDownloadKeyId :: {-# UNPACK #-} !Word64
+	, optionsUnpackPath :: !String
+	, optionsAvCheck :: !Bool
+	, optionsOutput :: !String
+	, optionsOutputYaml :: !Bool
+	}
+
 main :: IO ()
 main = do
-	run `catches`
+	maybeUploadFileName <- E.lookupEnv "UPLOAD_FILENAME"
+	uploadId <- (maybe 0 read) <$> E.lookupEnv "UPLOAD_ID"
+	apiKey <- (fromMaybe "") <$> E.lookupEnv "API_KEY"
+	downloadKeyId <- (maybe 0 read) <$> E.lookupEnv "DOWNLOAD_KEY_ID"
+
+	let
+		parser = O.info (O.helper <*> opts)
+			(  O.fullDesc
+			<> O.progDesc "Run itchy-runner"
+			<> O.header "itchy-runner"
+			)
+		opts = Options
+			<$> O.strOption
+				(  O.long "upload-filename"
+				<> (case maybeUploadFileName of
+					Just uploadFileName -> O.value uploadFileName <> O.showDefault
+					Nothing -> mempty
+					)
+				<> O.metavar "UPLOAD_FILENAME"
+				)
+			<*> O.option O.auto
+				(  O.long "upload-id"
+				<> O.value uploadId <> O.showDefault
+				<> O.metavar "UPLOAD_ID"
+				)
+			<*> O.strOption
+				(  O.long "api-key"
+				<> O.value apiKey <> O.showDefault
+				<> O.metavar "API_KEY"
+				)
+			<*> O.option O.auto
+				(  O.long "download-key-id"
+				<> O.value downloadKeyId <> O.showDefault
+				<> O.metavar "DOWNLOAD_KEY_ID"
+				)
+			<*> O.strOption
+				(  O.long "unpack-path"
+				<> O.value "package" <> O.showDefault
+				<> O.metavar "UNPACK_PATH"
+				)
+			<*> O.switch
+				(  O.long "av-check"
+				)
+			<*> O.strOption
+				(  O.long "output"
+				<> O.value ""
+				<> O.metavar "OUTPUT"
+				)
+			<*> O.switch
+				(  O.long "output-yaml"
+				)
+
+	options@Options
+		{ optionsOutput = outputFileName
+		, optionsOutputYaml = outputYaml
+		} <- O.execParser parser
+	(run options) `catches`
 		[ Handler $ \ReportedError -> return ()
 		, Handler $ \(SomeException e) -> report $ \r -> r
 			{ report_error = Just $ T.pack $ show e
 			}
 		]
-	T.putStrLn . T.decodeUtf8 . Y.encode =<< readIORef reportRef
+	(if null outputFileName then B.hPut stdout else B.writeFile outputFileName) .
+		(if outputYaml then Y.encode else S.encode) =<< readIORef reportRef
 
-run :: IO ()
-run = withBook $ \bk -> do
-	uploadFileName <- E.getEnv "ITCHIO_UPLOAD_FILENAME"
+run :: Options -> IO ()
+run Options
+	{ optionsUploadFileName = uploadFileName
+	, optionsUploadId = uploadId
+	, optionsApiKey = T.pack -> itchToken
+	, optionsDownloadKeyId = downloadKeyId
+	, optionsUnpackPath = unpackPath
+	, optionsAvCheck = avCheck
+	} = withBook $ \bk -> do
 
 	-- download if needed
-	maybeUploadId <- (ItchUploadId . read <$>) <$> E.lookupEnv "ITCHIO_UPLOAD_ID"
-	case maybeUploadId of
-		Just uploadId -> handleReport (\e r -> r
-			{ report_download = ReportDownload_failed e
-			}) $ do
-			-- get http manager
-			httpManager <- H.getGlobalManager
+	if uploadId > 0 then handleReport (\e r -> r
+		{ report_download = ReportDownload_failed e
+		}) $ do
+		-- get http manager
+		httpManager <- H.getGlobalManager
 
-			-- init itch api
-			itchToken <- T.pack <$> E.getEnv "ITCHIO_API_KEY"
-			itchApi <- book bk $ newItchApi httpManager itchToken
+		-- init itch api
+		itchApi <- book bk $ newItchApi httpManager itchToken
 
-			-- try to get download key id
-			maybeDownloadKeyId <- (ItchDownloadKeyId . read <$>) <$> E.lookupEnv "ITCHIO_DOWNLOAD_KEY_ID"
+		-- get download url
+		url <- itchDownloadUpload itchApi (ItchUploadId uploadId) (if downloadKeyId > 0 then Just (ItchDownloadKeyId downloadKeyId) else Nothing)
 
-			-- get download url
-			url <- itchDownloadUpload itchApi uploadId maybeDownloadKeyId
+		-- download
+		request <- H.parseUrlThrow $ T.unpack url
+		withFile uploadFileName WriteMode $ \h -> do
+			H.withResponse request httpManager $ \(H.responseBody -> bodyReader) -> let
+				step = do
+					chunk <- H.brRead bodyReader
+					unless (B.null chunk) $ do
+						B.hPut h chunk
+						step
+				in step
 
-			-- download
-			request <- H.parseUrlThrow $ T.unpack url
-			withFile uploadFileName WriteMode $ \h -> do
-				H.withResponse request httpManager $ \(H.responseBody -> bodyReader) -> let
-					step = do
-						chunk <- H.brRead bodyReader
-						unless (B.null chunk) $ do
-							B.hPut h chunk
-							step
-					in step
-
-			report $ \r -> r
-				{ report_download = ReportDownload_succeeded
-				}
-		Nothing -> report $ \r -> r
-			{ report_download = ReportDownload_skipped
+		report $ \r -> r
+			{ report_download = ReportDownload_succeeded
 			}
+	else report $ \r -> r
+		{ report_download = ReportDownload_skipped
+		}
 
 	-- AV check
-	handleReport (\e r -> r
+	if avCheck then handleReport (\e r -> r
 		{ report_avCheck = ReportAVCheck_failed e
 		}) $ do
 		(exitCode, output, errOutput) <- P.readProcessWithExitCode "clamscan" ["-ria", "--no-summary", uploadFileName] ""
@@ -127,6 +190,9 @@ run = withBook $ \bk -> do
 			ExitFailure _ -> reportError $ \r -> r
 				{ report_avCheck = ReportAVCheck_failed $ T.pack output <> T.pack errOutput
 				}
+	else report $ \r -> r
+		{ report_avCheck = ReportAVCheck_skipped
+		}
 
 	-- initialize libmagic
 	magic <- magicOpen [MagicMimeType]
@@ -136,7 +202,7 @@ run = withBook $ \bk -> do
 	handleReport (\e r -> r
 		{ report_unpack = ReportUnpack_failed e
 		}) $ do
-		P.callProcess "unar" ["-q", "-o", WORK_DIR, uploadFileName]
+		P.callProcess "unar" ["-q", "-o", unpackPath, uploadFileName]
 
 		-- parse entries
 		let
@@ -173,7 +239,7 @@ run = withBook $ \bk -> do
 				subNames <- D.listDirectory $ T.unpack path
 				M.fromList <$> forM subNames (\(T.pack -> subName) -> (subName, ) <$> parseEntry subName (path <> "/" <> subName))
 
-		entries <- parseSubEntries WORK_DIR
+		entries <- parseSubEntries (T.pack unpackPath)
 
 		report $ \r -> r
 			{ report_unpack = ReportUnpack_succeeded entries
@@ -261,5 +327,3 @@ parseFile name path mime = do
 		in f <$> try (Toml.parseTomlDoc ".itch.toml" <$> T.readFile (T.unpack path))
 
 	readIORef parsesRef
-
-pattern WORK_DIR = "package"
