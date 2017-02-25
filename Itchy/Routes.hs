@@ -19,6 +19,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import Data.Word
+import qualified Data.Yaml as Y
 import qualified Network.HTTP.Types as HT
 import Numeric
 import Text.Blaze.Html5 as H
