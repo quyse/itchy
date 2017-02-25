@@ -18,28 +18,28 @@
 				<td><div>Report generated 2017/02/07 2:41</div></td>
 				<td></td>
 			</tr>
-			<tr class="ok" style="display: none">
-				<td class="status"><div>OK</div></td>
+			<tr class="ok">
+				<td class="status"><div>PRESS</div></td>
 				<td><div>Access to paid content is obtained via press system</div></td>
 				<td>There're paid uploads in the package, but the author has opted their games into <a href="https://itch.io/press/user-list">itch.io press system</a>, and Sanity Keeper is a legitimate press user, so it got access to all uploads.</td>
 			</tr>
 			<tr class="ok">
-				<td class="status"><div>OK</div></td>
+				<td class="status"><div>KEY</div></td>
 				<td><div>Access to paid content is obtained via download key</div></td>
 				<td>The author kindly provided download key to Sanity Keeper, so the bot got access to all uploads.</td>
 			</tr>
-			<tr class="ok" style="display: none">
-				<td class="status"><div>OK</div></td>
+			<tr class="ok">
+				<td class="status"><div>FREE</div></td>
 				<td><div>All content is free</div></td>
 				<td>All content is free, so Sanity Keeper had zero troubles testing it.</td>
 			</tr>
-			<tr class="warn" style="display: none">
-				<td class="status"><div>WARN</div></td>
+			<tr class="warn">
+				<td class="status"><div>DEMO</div></td>
 				<td><div>Only free content has been tested</div></td>
 				<td>Some content is paid, and Sanity Keeper cannot access it. Author may consider providing download key to the bot, or opting their games into <a href="https://itch.io/press/user-list">itch.io press system</a>, as the bot is a legitimate press user.</td>
 			</tr>
-			<tr class="bad" style="display: none">
-				<td class="status"><div>BAD</div></td>
+			<tr class="bad">
+				<td class="status"><div>PAID</div></td>
 				<td><div>No free content</div></td>
 				<td>There's no free uploads, and Sanity Keeper is unable to access paid ones (if there're some). Author may consider providing download key to the bot, or opting their games into <a href="https://itch.io/press/user-list">itch.io press system</a>, as the bot is a legitimate press user.</td>
 			</tr>
@@ -137,6 +137,24 @@
 				<td class="status"><div>WARN</div></td>
 				<td class="channel"><div>model-editor-macos</div></td>
 				<td>App bundle is not signed with Apple signature</td>
+			</tr>
+			<tr class="tip">
+				<td class="status"><div>TIP</div></td>
+				<td class="channel"><div>model-editor-windows</div></td>
+				<td>Display name is not set</td>
+				<td class="comment">Currently your <code>model-editor-windows</code> upload is displayed on game's itch.io page as <code>model-editor.exe</code>, but you can set display name to whatever you like, e.g. "Windows x86 version".</td>
+			</tr>
+			<tr class="tip">
+				<td class="status"><div>TIP</div></td>
+				<td class="channel"><div>model-editor-windows</div></td>
+				<td>User version is not set</td>
+				<td class="comment">Currently version of <code>model-editor-windows</code> is displayed as 22 - that's just a sequence number of your upload. You can set version to whatever you like by using <code>--userversion</code> or <code>--userversion-file</code> butler's switch, see <a href="https://itch.io/docs/butler/pushing.html#specifying-your-own-version-number">docs</a> for details.</td>
+			</tr>
+			<tr class="tip">
+				<td class="status"><div>TIP</div></td>
+				<td class="channel"><div>model-editor-linux</div></td>
+				<td>Not using butler</td>
+				<td class="comment">Looks like <code>model-editor-windows</code> upload was uploaded manually. Consider using itch.io's <a href="https://itch.io/docs/butler/">butler</a> tool: it allows you to update game builds much more quickly (thanks to binary patches) and easily automate uploading builds.</td>
 			</tr>
 			<tr class="tip">
 				<td class="status"><div>TIP</div></td>

@@ -11,7 +11,9 @@
 * Warn against Unity-plugin games
 * Executable permissions on Linux and macOS - for binaries, scripts and .desktop
 * Filenames with Unicode symbols
-
+* Suggest setting display name for uploads with missing display name
+* Suggest using butler for uploads (i.e. detect wharf-non-enabled uploads)
+* Suggest using user-version when using butler
 
 ## glibc versions by ubuntu version
 
