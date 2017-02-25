@@ -45,6 +45,7 @@ executable itchyd
     , template-haskell
     , text
     , unix
+    , unordered-containers
     , wai-app-static
     , wai-extra
     , wai-routes
@@ -74,6 +75,7 @@ executable itchy-runner
     , optparse-applicative
     , process
     , unix
+    , unordered-containers
     , text
     , yaml
   default-language:    Haskell2010

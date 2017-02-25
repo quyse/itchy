@@ -162,9 +162,9 @@ postInvestigateUploadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
 		} <- W.sub
 	maybeUpload <- liftIO $ itchCacheGetUpload itchCache uploadId
 	case maybeUpload of
-		Just ItchUpload
+		Just (ItchUpload
 			{ itchUpload_filename = uploadFileName
-			} -> do
+			}, _maybeBuild) -> do
 			liftIO $ investigateItchUpload itchInvestigator uploadId uploadFileName $ itchCachePutReport itchCache uploadId
 			W.status HT.noContent204
 		Nothing -> W.status HT.notFound404
@@ -216,10 +216,12 @@ page titleText pieces bodyHtml = do
 					Just ItchUser
 						{ itchUser_username = userName
 						, itchUser_url = userUrl
-						, itchUser_cover_url = userCoverUrl
+						, itchUser_cover_url = userMaybeCoverUrl
 						} -> H.div ! class_ "user" $ do
 						a ! href (toValue userUrl) $ do
-							img ! src (toValue userCoverUrl)
+							case userMaybeCoverUrl of
+								Just userCoverUrl -> img ! src (toValue userCoverUrl)
+								Nothing -> mempty
 							toHtml userName
 					Nothing -> mempty
 			h1 $ toHtml titleText

@@ -3,7 +3,7 @@ Module: Itchy.Itch
 Description: Itch API
 -}
 
-{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving, OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving, LambdaCase, OverloadedStrings, ViewPatterns #-}
 
 module Itchy.Itch
 	( ItchApi()
@@ -13,6 +13,8 @@ module Itchy.Itch
 	, itchGetGame
 	, itchGetGameUploads
 	, itchDownloadUpload
+	, itchGetUploadBuilds
+	, itchGetBuild
 	, itchSearchGame
 	, ItchUserId(..)
 	, ItchUser(..)
@@ -20,12 +22,15 @@ module Itchy.Itch
 	, ItchGame(..)
 	, ItchUploadId(..)
 	, ItchUpload(..)
+	, ItchBuildId(..)
+	, ItchBuild(..)
 	, ItchDownloadKeyId(..)
 	) where
 
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as B
+import qualified Data.HashMap.Lazy as HM
 import Data.Monoid
 import qualified Data.Serialize as S
 import Data.Serialize.Text()
@@ -100,15 +105,7 @@ itchGetGameUploads api (ItchGameId gameId) maybeDownloadKeyId = do
 	let path = case maybeDownloadKeyId of
 		Just (ItchDownloadKeyId downloadKeyId) -> "/download-key/" <> fromString (show downloadKeyId) <> "/uploads"
 		Nothing -> "/game/" <> fromString (show gameId) <> "/uploads"
-	response <- itchRequest api path []
-	case response of
-		ItchUploadsResponse
-			{ itchUploadsResponse_uploads = Just uploads
-			} -> return $ Right uploads
-		ItchUploadsResponse
-			{ itchUploadsResponse_errors = Just errors
-			} -> return $ Left errors
-		_ -> return $ Left []
+	itchParseArrayResponse "uploads" <$> itchRequest api path []
 
 itchDownloadUpload :: ItchApi -> ItchUploadId -> Maybe ItchDownloadKeyId -> IO T.Text
 itchDownloadUpload api (ItchUploadId uploadId) maybeDownloadKeyId = itchUrlResponse_url <$> itchRequest api ("/upload/" <> T.encodeUtf8 (T.pack $ show uploadId) <> "/download") params where
@@ -116,15 +113,50 @@ itchDownloadUpload api (ItchUploadId uploadId) maybeDownloadKeyId = itchUrlRespo
 		Just (ItchDownloadKeyId downloadKeyId) -> [("download_key_id", Just $ T.encodeUtf8 $ T.pack $ show downloadKeyId)]
 		Nothing -> []
 
+itchGetUploadBuilds :: ItchApi -> ItchUploadId -> Maybe ItchDownloadKeyId -> IO (Either [T.Text] [ItchBuild])
+itchGetUploadBuilds api (ItchUploadId uploadId) maybeDownloadKeyId = do
+	responseValue <- itchRequest api ("/upload/" <> T.encodeUtf8 (T.pack $ show uploadId) <> "/builds") $ case maybeDownloadKeyId of
+		Just (ItchDownloadKeyId downloadKeyId) -> [("download_key_id", Just $ T.encodeUtf8 $ T.pack $ show downloadKeyId)]
+		Nothing -> []
+	return $ itchParseArrayResponse "builds" responseValue
+
+itchGetBuild :: ItchApi -> ItchUploadId -> ItchBuildId -> Maybe ItchDownloadKeyId -> IO (Either [T.Text] ItchBuild)
+itchGetBuild api (ItchUploadId uploadId) (ItchBuildId buildId) maybeDownloadKeyId = do
+	response <- itchRequest api ("/upload/" <> T.encodeUtf8 (T.pack $ show uploadId) <> "/builds/" <> T.encodeUtf8 (T.pack $ show buildId)) $ case maybeDownloadKeyId of
+		Just (ItchDownloadKeyId downloadKeyId) -> [("download_key_id", Just $ T.encodeUtf8 $ T.pack $ show downloadKeyId)]
+		Nothing -> []
+	case response of
+		ItchBuildResponse
+			{ itchBuildResponse_build = Just build
+			} -> return $ Right build
+		ItchBuildResponse
+			{ itchBuildResponse_errors = Just errors
+			} -> return $ Left errors
+		_ -> return $ Left []
+
 itchSearchGame :: ItchApi -> T.Text -> IO [ItchGame]
 itchSearchGame api query = itchGamesResponse_games <$> itchRequest api "/search/games" [("query", Just (T.encodeUtf8 query))]
+
+itchParseArrayResponse :: A.FromJSON a => T.Text -> A.Value -> Either [T.Text] [a]
+itchParseArrayResponse fieldName = \case
+	A.Object (HM.lookup fieldName -> Just thingsValue) -> case thingsValue of
+		A.Array {} -> case A.parseEither A.parseJSON thingsValue of
+			Right things -> Right things
+			Left e -> Left [T.pack e]
+		-- handle empty object instead of array when no things
+		A.Object (HM.null -> True) -> Right []
+		_ -> Left ["wrong things array"]
+	A.Object (HM.lookup "errors" -> Just errorsValue) -> case A.parseEither A.parseJSON errorsValue of
+		Right errors -> Left errors
+		Left e -> Left [T.pack e]
+	_ -> Left ["wrong json"]
 
 newtype ItchUserId = ItchUserId Word64 deriving (Generic, Show, S.Serialize, A.FromJSON)
 data ItchUser = ItchUser
 	{ itchUser_id :: !ItchUserId
 	, itchUser_username :: !T.Text
 	, itchUser_url :: !T.Text
-	, itchUser_cover_url :: !T.Text
+	, itchUser_cover_url :: !(Maybe T.Text)
 	} deriving (Generic, Show)
 instance S.Serialize ItchUser
 instance A.FromJSON ItchUser where
@@ -157,13 +189,13 @@ instance A.FromJSON ItchGamesResponse where
 		{ A.fieldLabelModifier = drop 18
 		}
 
-data ItchUploadsResponse = ItchUploadsResponse
-	{ itchUploadsResponse_uploads :: !(Maybe [ItchUpload])
-	, itchUploadsResponse_errors :: !(Maybe [T.Text])
+data ItchBuildResponse = ItchBuildResponse
+	{ itchBuildResponse_build :: !(Maybe ItchBuild)
+	, itchBuildResponse_errors :: !(Maybe [T.Text])
 	} deriving (Generic, Show)
-instance A.FromJSON ItchUploadsResponse where
+instance A.FromJSON ItchBuildResponse where
 	parseJSON = A.genericParseJSON A.defaultOptions
-		{ A.fieldLabelModifier = drop 20
+		{ A.fieldLabelModifier = drop 18
 		}
 
 data ItchUrlResponse = ItchUrlResponse
@@ -216,6 +248,20 @@ instance S.Serialize ItchUpload
 instance A.FromJSON ItchUpload where
 	parseJSON = A.genericParseJSON A.defaultOptions
 		{ A.fieldLabelModifier = drop 11
+		}
+
+newtype ItchBuildId = ItchBuildId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON)
+data ItchBuild = ItchBuild
+	{ itchBuild_id :: !ItchBuildId
+	, itchBuild_version :: !Word64
+	, itchBuild_user_version :: !(Maybe T.Text)
+	, itchBuild_created_at :: !T.Text
+	, itchBuild_updated_at :: !T.Text
+	} deriving (Generic, Show)
+instance S.Serialize ItchBuild
+instance A.FromJSON ItchBuild where
+	parseJSON = A.genericParseJSON A.defaultOptions
+		{ A.fieldLabelModifier = drop 10
 		}
 
 newtype ItchDownloadKeyId = ItchDownloadKeyId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON)

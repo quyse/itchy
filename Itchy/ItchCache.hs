@@ -77,7 +77,7 @@ data CachedGame = CachedGame
 instance S.Serialize CachedGame
 
 data CachedUpload = CachedUpload
-	{ upload_maybeItchUpload :: !(Maybe ItchUpload)
+	{ upload_maybeItchUploadWithBuild :: !(Maybe (ItchUpload, Maybe ItchBuild))
 	, upload_updated :: {-# UNPACK #-} !Int64
 	} deriving Generic
 instance S.Serialize CachedUpload
@@ -125,10 +125,10 @@ itchCacheOperation ItchCache
 	{ itchCacheFlow = flow
 	, itchCacheApiCooldown = apiCooldown
 	} io = atomically $ asyncRunInFlow flow $ do
-	io
+	catch io $ \(SomeException e) -> print e
 	threadDelay apiCooldown
 
-itchCacheGetGame :: ItchCache -> ItchGameId -> IO (Maybe (ItchGame, [ItchUpload]))
+itchCacheGetGame :: ItchCache -> ItchGameId -> IO (Maybe (ItchGame, [(ItchUpload, Maybe ItchBuild)]))
 itchCacheGetGame cache gameId = do
 	-- try to get game from database
 	maybeGame <- itchCacheGet CacheKeyGame cache gameId
@@ -152,8 +152,8 @@ itchCacheGetGame cache gameId = do
 				maybeUpload <- itchCacheGet CacheKeyUpload cache uploadId
 				case maybeUpload of
 					Just CachedUpload
-						{ upload_maybeItchUpload = Just upload
-						} -> return [upload]
+						{ upload_maybeItchUploadWithBuild = Just uploadWithBuild
+						} -> return [uploadWithBuild]
 					_ -> return []
 
 			return $ Just (itchGame, itchUploads)
@@ -178,13 +178,29 @@ itchCacheRefreshGame cache@ItchCache
 					threadDelay apiCooldown
 					-- get uploads
 					updatedUploads <- (either (const []) id) <$> itchGetGameUploads itchApi gameId Nothing
-					-- save uploads in cache
+					-- get upload infos and save uploads in cache
 					forM_ updatedUploads $ \upload@ItchUpload
 						{ itchUpload_id = uploadId
-						} -> itchCachePut CacheKeyUpload cache uploadId CachedUpload
-						{ upload_maybeItchUpload = Just upload
-						, upload_updated = currentTime
-						}
+						} -> do
+						-- delay
+						threadDelay apiCooldown
+						-- get upload's builds
+						responseBuilds <- itchGetUploadBuilds itchApi uploadId Nothing
+						-- get latest build's info
+						maybeBuild <- case responseBuilds of
+							Right (ItchBuild
+								{ itchBuild_id = buildId
+								} : _) -> do
+								-- delay
+								threadDelay apiCooldown
+								-- get build info
+								either (const Nothing) Just <$> itchGetBuild itchApi uploadId buildId Nothing
+							_ -> return Nothing
+						-- save in cache
+						itchCachePut CacheKeyUpload cache uploadId CachedUpload
+							{ upload_maybeItchUploadWithBuild = Just (upload, maybeBuild)
+							, upload_updated = currentTime
+							}
 					return CachedGame
 						{ game_maybeItchGameWithUploads = Just (updatedItchGame, map itchUpload_id updatedUploads)
 						, game_updated = currentTime
@@ -196,10 +212,10 @@ itchCacheRefreshGame cache@ItchCache
 			-- save game in cache
 			itchCachePut CacheKeyGame cache gameId updatedGame
 
-itchCacheGetUpload :: ItchCache -> ItchUploadId -> IO (Maybe ItchUpload)
+itchCacheGetUpload :: ItchCache -> ItchUploadId -> IO (Maybe (ItchUpload, Maybe ItchBuild))
 itchCacheGetUpload cache uploadId = do
 	maybeCachedUpload <- itchCacheGet CacheKeyUpload cache uploadId
-	return $ maybeCachedUpload >>= upload_maybeItchUpload
+	return $ maybeCachedUpload >>= upload_maybeItchUploadWithBuild
 
 itchCacheGetReport :: ItchCache -> ItchUploadId -> IO (Maybe Report)
 itchCacheGetReport = itchCacheGet CacheKeyReport
