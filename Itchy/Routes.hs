@@ -90,6 +90,9 @@ getGameR gameId = W.runHandlerM $ do
 			, itchGame_p_android = gameAndroid
 			}, gameUploads) -> do
 			let gameByAuthor = gameTitle <> " by " <> creatorUserName
+			maybeReports <- liftIO $ forM gameUploads $ \(ItchUpload
+				{ itchUpload_id = uploadId
+				}, _maybeBuild) -> itchCacheGetReport itchCache uploadId
 			page gameByAuthor [("Dashboard", DashboardR), ("Games", GamesR), (gameByAuthor, GameR gameId)] $ H.div ! class_ "game_info" $ do
 				case maybeGameCoverUrl of
 					Just coverUrl -> img ! class_ "cover" ! src (toValue coverUrl)
@@ -114,7 +117,8 @@ getGameR gameId = W.runHandlerM $ do
 						th "File name"
 						th "Size"
 						th "Tags"
-					forM_ gameUploads $ \ItchUpload
+						th "Butler"
+					forM_ gameUploads $ \(ItchUpload
 						{ itchUpload_id = ItchUploadId uploadId
 						, itchUpload_display_name = fromMaybe "" -> uploadDisplayName
 						, itchUpload_filename = uploadFileName
@@ -125,9 +129,9 @@ getGameR gameId = W.runHandlerM $ do
 						, itchUpload_p_linux = uploadLinux
 						, itchUpload_p_osx = uploadMacOS
 						, itchUpload_p_android = uploadAndroid
-						} -> H.tr ! class_ "upload" $ do
-						H.td ! class_ "name" $ a ! href (toValue $ showRoute $ UploadR uploadId) $ toHtml uploadDisplayName
-						H.td ! class_ "filename" $ toHtml uploadFileName
+						}, maybeBuild) -> H.tr ! class_ "upload" $ do
+						H.td ! class_ "name" $ toHtml uploadDisplayName
+						H.td ! class_ "filename" $ a ! href (toValue $ showRoute $ UploadR uploadId) $ toHtml uploadFileName
 						H.td $
 							if uploadSize < 2 * 1024 then toHtml (show uploadSize) <> " b"
 							else if uploadSize < 2 * 1024 * 1024 then toHtml (showFFloat (Just 1) (fromIntegral uploadSize / 1024 :: Float) "") <> " Kb"
@@ -140,6 +144,21 @@ getGameR gameId = W.runHandlerM $ do
 							if uploadAndroid then H.span ! class_ "tag" $ "android" else mempty
 							if uploadDemo then H.span ! class_ "tag" $ "demo" else mempty
 							if uploadPreorder then H.span ! class_ "tag" $ "preorder" else mempty
+						H.td $ case maybeBuild of
+							Just ItchBuild
+								{ itchBuild_version = buildVersion
+								, itchBuild_user_version = fromMaybe "<no user version>" -> buildUserVersion
+								} -> "version: " <> toHtml (show buildVersion) <> ", user version: " <> toHtml buildUserVersion
+							Nothing -> "doesn't use butler"
+				h2 "Report"
+				forM_ (zip gameUploads maybeReports) $ \((ItchUpload
+					{ itchUpload_id = ItchUploadId uploadId
+					}, _maybeBuild), maybeReport) -> do
+					case maybeReport of
+						Just report -> H.pre $ toHtml $ T.decodeUtf8 $ Y.encode report
+						Nothing -> H.p "No report has been generated yet."
+					H.form ! A.action (toValue $ showRoute $ InvestigateUploadR uploadId) ! method "POST" $
+						H.input ! A.type_ "submit" ! A.value (toValue $ "Process upload " <> show uploadId)
 		Nothing -> do
 			let gameByAuthor = "unknown"
 			page gameByAuthor [("Dashboard", DashboardR), ("Games", GamesR), (gameByAuthor, GameR gameId)] $ H.p "Information about this game is not cached yet."
