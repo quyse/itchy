@@ -98,6 +98,7 @@ getGameR gameId = W.runHandlerM $ do
 		{ appItchCache = itchCache
 		} <- W.sub
 	showRoute <- W.showRouteSub
+	loc <- getLocalization
 
 	maybeGameWithUploads <- liftIO $ itchCacheGetGame itchCache (ItchGameId gameId)
 
@@ -118,34 +119,34 @@ getGameR gameId = W.runHandlerM $ do
 			, itchGame_p_osx = gameMacOS
 			, itchGame_p_android = gameAndroid
 			}, gameUploads) -> do
-			let gameByAuthor = gameTitle <> " by " <> creatorUserName
+			let gameByAuthor = locGameByAuthor loc gameTitle creatorUserName
 			maybeReports <- liftIO $ forM gameUploads $ \(ItchUpload
 				{ itchUpload_id = uploadId
 				}, _maybeBuild) -> itchCacheGetReport itchCache uploadId
-			page gameByAuthor [("Dashboard", DashboardR), ("Games", GamesR), (gameByAuthor, GameR gameId)] $ H.div ! class_ "game_info" $ do
+			page gameByAuthor [(locDashboard loc, DashboardR), (locGames loc, GamesR), (gameByAuthor, GameR gameId)] $ H.div ! class_ "game_info" $ do
 				case maybeGameCoverUrl of
 					Just coverUrl -> img ! class_ "cover" ! src (toValue coverUrl)
 					Nothing -> mempty
 				p $ toHtml gameShortText
-				p $ "Platforms: "
+				p $ toHtml (locPlatforms loc) <> ": "
 					<> (if gameWindows then H.span ! class_ "tag" $ "windows" else mempty)
 					<> (if gameLinux then H.span ! class_ "tag" $ "linux" else mempty)
 					<> (if gameMacOS then H.span ! class_ "tag" $ "macos" else mempty)
 					<> (if gameAndroid then H.span ! class_ "tag" $ "android" else mempty)
-				p $ if gameHasDemo then "Has demo" else "No demo"
-				p $
+				p $ toHtml $ if gameHasDemo then locHasDemo loc else locNoDemo loc
+				p $ toHtml $
 					if gameCanBeBought then
-						if gameMinPrice <= 0 then "Free, donations allowed"
-						else "Minimum price $" <> toHtml (T.pack $ show gameMinPrice)
-					else "Free, payments disabled"
-				p $ if gameInPressSystem then "Opted into itch.io press system" else "Did not opted into itch.io press system"
-				h2 "Uploads"
+						if gameMinPrice <= 0 then locFreeDonationsAllowed loc
+						else locMinimumPrice loc <> ": $" <> T.pack (show gameMinPrice)
+					else locFreePaymentsDisabled loc
+				p $ toHtml $ if gameInPressSystem then locOptedInPressSystem loc else locNotOptedInPressSystem loc
+				h2 $ toHtml $ locUploads loc
 				table $ do
 					tr $ do
-						th "Display name"
-						th "File name"
-						th "Size"
-						th "Tags"
+						th $ toHtml $ locDisplayName loc
+						th $ toHtml $ locFileName loc
+						th $ toHtml $ locSize loc
+						th $ toHtml $ locTags loc
 						th "Butler"
 					forM_ gameUploads $ \(ItchUpload
 						{ itchUpload_id = ItchUploadId uploadId

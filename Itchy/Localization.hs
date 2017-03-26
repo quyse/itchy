@@ -43,6 +43,20 @@ data Localization = Localization
 	, locGames :: !T.Text
 	, locReports :: !T.Text
 	, locReportWithNumber :: !(Int -> T.Text)
+	, locGameByAuthor :: !(T.Text -> T.Text -> T.Text)
+	, locPlatforms :: !T.Text
+	, locHasDemo :: !T.Text
+	, locNoDemo :: !T.Text
+	, locFreeDonationsAllowed :: !T.Text
+	, locMinimumPrice :: !T.Text
+	, locFreePaymentsDisabled :: !T.Text
+	, locOptedInPressSystem :: !T.Text
+	, locNotOptedInPressSystem :: !T.Text
+	, locUploads :: !T.Text
+	, locDisplayName :: !T.Text
+	, locFileName :: !T.Text
+	, locSize :: !T.Text
+	, locTags :: !T.Text
 	, locGeneralError :: !(T.Text -> T.Text)
 	, locDownloadFailed :: !(T.Text -> T.Text)
 	, locAVCheckOk :: !T.Text
