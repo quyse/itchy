@@ -42,7 +42,6 @@ data Localization = Localization
 	, locDashboard :: !T.Text
 	, locGames :: !T.Text
 	, locReports :: !T.Text
-	, locReportWithNumber :: !(Int -> T.Text)
 	, locGameByAuthor :: !(T.Text -> T.Text -> T.Text)
 	, locPlatforms :: !T.Text
 	, locHasDemo :: !T.Text

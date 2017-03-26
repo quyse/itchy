@@ -10,7 +10,6 @@ module Itchy.Localization.En
 	) where
 
 import Data.Monoid
-import qualified Data.Text as T
 
 import Itchy.Localization
 
@@ -20,7 +19,6 @@ localizationEn = Localization
 	, locDashboard = "Dashboard"
 	, locGames = "Games"
 	, locReports = "Reports"
-	, locReportWithNumber = ("Report " <>) . T.pack . show
 	, locGameByAuthor = \game author -> game <> " by " <> author
 	, locPlatforms = "Platforms"
 	, locHasDemo = "Has demo"
