@@ -51,9 +51,6 @@ data Config = Config
 	{ config_host :: !T.Text
 	, config_port :: !Int
 	, config_dbFileName :: !T.Text
-	, config_gitlabProjectId :: !T.Text
-	, config_gitlabTriggerToken :: !T.Text
-	, config_gitlabTriggerRef :: !T.Text
 	, config_itchApiKey :: !T.Text
 	, config_itchApiCooldown :: !Int
 	, config_cacheStalePeriod :: !Int64
@@ -103,8 +100,3 @@ run Options
 			, appItchInvestigator = itchInvestigator
 			}
 		W.catchall $ W.staticApp staticSettings
-
-checkError :: Exception e => Either e r -> IO r
-checkError q = case q of
-	Left e -> throwIO e
-	Right r -> return r
