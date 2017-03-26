@@ -30,6 +30,13 @@ tr
 				width 32px
 				height 32px
 
+.footer
+	& > .localizations
+		text-align center
+		& > a
+			margin-left 3px
+			margin-right 3px
+
 .game_info
 	& > .cover
 		float right
@@ -72,6 +79,8 @@ h2
 .arch
 	font-family monospace
 	font-weight bold
+.version
+	font-family monospace
 .ok .status > *
 	background #0a0
 	color #fff

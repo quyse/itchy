@@ -18,6 +18,9 @@ executable itchyd
     Itchy.Itch
     Itchy.ItchCache
     Itchy.ItchInvestigator
+    Itchy.Localization
+    Itchy.Localization.En
+    Itchy.Localization.Ru
     Itchy.Report
     Itchy.Routes
     Itchy.Static
@@ -25,6 +28,7 @@ executable itchyd
     aeson
     , base
     , blaze-html
+    , blaze-markup
     , bytestring
     , cereal
     , cereal-text

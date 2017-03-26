@@ -31,6 +31,9 @@ import qualified Web.Cookie as W
 import Itchy.ItchInvestigator
 import Itchy.Itch
 import Itchy.ItchCache
+import Itchy.Localization
+import Itchy.Localization.En
+import Itchy.Localization.Ru
 import Itchy.Static
 
 data App = App
@@ -38,6 +41,27 @@ data App = App
 	, appItchCache :: !ItchCache
 	, appItchInvestigator :: !ItchInvestigator
 	}
+
+localizations :: [(T.Text, Localization)]
+localizations =
+	[ ("en", localizationEn)
+	, ("ru", localizationRu)
+	]
+
+getLocalization :: W.HandlerM App master Localization
+getLocalization = do
+	maybeNewLocale <- W.getParam "locale"
+	locale <- case maybeNewLocale of
+		Just newLocale -> do
+			W.setCookie W.def
+				{ W.setCookieName ="locale"
+				, W.setCookieValue = T.encodeUtf8 newLocale
+				, W.setCookiePath = Just "/"
+				, W.setCookieMaxAge = Just $ 365 * 24 * 3600
+				}
+			return newLocale
+		Nothing -> fromMaybe "en" <$> W.getCookie "locale"
+	return $ fromMaybe localizationEn $ lookup locale localizations
 
 W.mkRoute "App" [W.parseRoutes|
 / DashboardR GET
@@ -52,16 +76,20 @@ W.mkRoute "App" [W.parseRoutes|
 getDashboardR :: W.Handler App
 getDashboardR = W.runHandlerM $ do
 	showRoute <- W.showRouteSub
-	page "Dashboard" [("Dashboard", DashboardR)] $ do
-		a ! href (toValue $ showRoute ReportsR) $ "Reports"
+	loc <- getLocalization
+	page (locDashboard loc) [(locDashboard loc, DashboardR)] $ do
+		a ! href (toValue $ showRoute ReportsR) $ toHtml $ locReports loc
 
 getReportsR :: W.Handler App
-getReportsR = W.runHandlerM $ page "Reports" [("Dashboard", DashboardR), ("Reports", ReportsR)] $ do
-	mempty
+getReportsR = W.runHandlerM $ do
+	loc <- getLocalization
+	page (locReports loc) [(locDashboard loc, DashboardR), (locReports loc, ReportsR)] $ do
+		mempty
 
 getGamesR :: W.Handler App
 getGamesR = W.runHandlerM $ do
-	page "Games" [("Dashboard", DashboardR), ("Games", GamesR)] $ do
+	loc <- getLocalization
+	page (locGames loc) [(locDashboard loc, DashboardR), (locGames loc, GamesR)] $ do
 		mempty
 
 getGameR :: Word64 -> W.Handler App
@@ -149,7 +177,7 @@ getGameR gameId = W.runHandlerM $ do
 							Just ItchBuild
 								{ itchBuild_version = buildVersion
 								, itchBuild_user_version = fromMaybe "<no user version>" -> buildUserVersion
-								} -> "version: " <> toHtml (show buildVersion) <> ", user version: " <> toHtml buildUserVersion
+								} -> "version: " <> (H.span ! class_ "version" $ toHtml $ show buildVersion) <> ", user version: " <> (H.span ! class_ "version" $ toHtml buildUserVersion)
 							Nothing -> "doesn't use butler"
 				h2 "Report"
 				forM_ (zip gameUploads maybeReports) $ \((ItchUpload
@@ -203,6 +231,7 @@ postAuthR = W.runHandlerM $ do
 			W.setCookie W.def
 				{ W.setCookieName = "user"
 				, W.setCookieValue = BA.convertToBase BA.Base64URLUnpadded $ S.encode user
+				, W.setCookiePath = Just "/"
 				}
 			showRoute <- W.showRouteSub
 			W.header "Location" (T.encodeUtf8 $ showRoute DashboardR)
@@ -246,3 +275,6 @@ page titleText pieces bodyHtml = do
 					Nothing -> mempty
 			h1 $ toHtml titleText
 			bodyHtml
+			H.div ! class_ "footer" $
+				H.div ! class_ "localizations" $ forM_ localizations $ \(locale, localization) ->
+					H.a ! href ("?locale=" <> toValue locale) $ toHtml $ locLanguageName localization
