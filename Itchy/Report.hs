@@ -3,7 +3,7 @@ Module: Itchy.Report
 Description: Report structures.
 -}
 
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving #-}
 
 module Itchy.Report
 	( Report(..)
@@ -21,6 +21,7 @@ module Itchy.Report
 	, ReportMachOSubBinary(..)
 	, ReportArch(..)
 	, ReportDep(..)
+	, ReportDepVersion(..)
 	) where
 
 import qualified Data.Aeson.Types as A
@@ -199,13 +200,16 @@ instance A.FromJSON ReportArch where
 
 data ReportDep = ReportDep
 	{ reportDep_name :: !T.Text
-	, reportDep_version :: !T.Text
+	, reportDep_version :: !ReportDepVersion
 	} deriving Generic
 instance S.Serialize ReportDep
 instance A.ToJSON ReportDep where
 	toJSON = A.genericToJSON jsonOptions
 instance A.FromJSON ReportDep where
 	parseJSON = A.genericParseJSON jsonOptions
+
+newtype ReportDepVersion = ReportDepVersion [Integer]
+	deriving (Generic, Eq, Ord, S.Serialize, A.ToJSON, A.FromJSON)
 
 jsonOptions :: A.Options
 jsonOptions = A.defaultOptions

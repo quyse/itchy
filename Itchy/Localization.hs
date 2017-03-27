@@ -18,15 +18,19 @@ import qualified Text.Blaze as TB
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
-newtype RichText = RichText [RichChunk] deriving Monoid
+newtype RichText = RichText [RichChunk] deriving (Eq, Ord, Monoid)
 
 instance IsString RichText where
 	fromString s = RichText [fromString s]
+
+instance TB.ToMarkup RichText where
+	toMarkup (RichText chunks) = mconcat $ map TB.toMarkup chunks
 
 data RichChunk
 	= RichChunkText !T.Text
 	| RichChunkLink !T.Text !T.Text
 	| RichChunkCode !T.Text
+	deriving (Eq, Ord)
 
 instance IsString RichChunk where
 	fromString = RichChunkText . T.pack
@@ -56,9 +60,35 @@ data Localization = Localization
 	, locFileName :: !T.Text
 	, locSize :: !T.Text
 	, locTags :: !T.Text
-	, locGeneralError :: !(T.Text -> T.Text)
-	, locDownloadFailed :: !(T.Text -> T.Text)
-	, locAVCheckOk :: !T.Text
-	, locAVCheckFailed :: !(T.Text -> T.Text)
-	, locUnpackFailed :: !(T.Text -> T.Text)
+	, locSizeInBytes :: !(Integer -> T.Text)
+	, locReport :: !T.Text
+	, locRecordSeverity :: !T.Text
+	, locRecordScope :: !T.Text
+	, locRecordName :: !T.Text
+	, locRecordMessage :: !T.Text
+	, locScopeUpload :: !(Maybe T.Text -> RichText)
+	, locScopeEntry :: !(Maybe T.Text -> T.Text -> RichText)
+	, locSeverityOk :: !T.Text
+	, locSeverityInfo :: !T.Text
+	, locSeverityTip :: !T.Text
+	, locSeverityWarn :: !T.Text
+	, locSeverityBad :: !T.Text
+	, locSeverityErr :: !T.Text
+	, locRecordUploadDisplayNameSet :: !RichText
+	, locRecordUploadDisplayNameNotSet :: !RichText
+	, locMessageUploadDisplayNameNotSet :: !RichText
+	, locRecordUnknownError :: !RichText
+	, locRecordAVCheckNotStarted :: !RichText
+	, locRecordAVCheckSkipped :: !RichText
+	, locRecordAVCheckOk :: !RichText
+	, locRecordAVCheckFailed :: !RichText
+	, locRecordUnpackNotStarted :: !RichText
+	, locRecordUnpackFailed :: !RichText
+	, locRecordNoBinaries :: !RichText
+	, locMessageNoBinaries :: !RichText
+	, locRecordBinariesCoverPlatforms :: !RichText
+	, locMessageBinariesCoverPlatforms :: !RichText
+	, locRecordBinariesPlatformsMismatch :: !RichText
+	, locMessageBinariesPlatformsMismatch :: !RichText
+	, locRecordNoUploads :: !RichText
 	}

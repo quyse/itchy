@@ -25,6 +25,7 @@ code, pre {
 .status > * {
 	font-family: sans-serif;
 	font-weight: bold;
+	font-size: 0.8em;
 	text-align: center;
 	padding: 1px 4px;
 	margin: 1px 2px;

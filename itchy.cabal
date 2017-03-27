@@ -22,6 +22,8 @@ executable itchyd
     Itchy.Localization.En
     Itchy.Localization.Ru
     Itchy.Report
+    Itchy.Report.Analysis
+    Itchy.Report.Record
     Itchy.Routes
     Itchy.Static
   build-depends:
@@ -38,6 +40,7 @@ executable itchyd
     , directory
     , flaw-base
     , flaw-lmdb
+    , hashable
     , http-client
     , http-client-tls
     , http-types
@@ -71,6 +74,7 @@ executable itchy-runner
     , containers
     , directory
     , flaw-base
+    , hashable
     , htoml
     , http-client
     , http-client-tls

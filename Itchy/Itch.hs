@@ -30,6 +30,7 @@ module Itchy.Itch
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as B
+import Data.Hashable
 import qualified Data.HashMap.Lazy as HM
 import Data.Monoid
 import qualified Data.Serialize as S
@@ -206,7 +207,7 @@ instance A.FromJSON ItchUrlResponse where
 		{ A.fieldLabelModifier = drop 16
 		}
 
-newtype ItchGameId = ItchGameId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON)
+newtype ItchGameId = ItchGameId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON, Hashable)
 data ItchGame = ItchGame
 	{ itchGame_id :: !ItchGameId
 	, itchGame_title :: !T.Text
@@ -230,7 +231,7 @@ instance A.FromJSON ItchGame where
 		{ A.fieldLabelModifier = drop 9
 		}
 
-newtype ItchUploadId = ItchUploadId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON)
+newtype ItchUploadId = ItchUploadId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON, Hashable)
 data ItchUpload = ItchUpload
 	{ itchUpload_id :: !ItchUploadId
 	, itchUpload_display_name :: !(Maybe T.Text)
@@ -238,7 +239,7 @@ data ItchUpload = ItchUpload
 	, itchUpload_game_id :: !Int
 	, itchUpload_demo :: !Bool
 	, itchUpload_preorder :: !Bool
-	, itchUpload_size :: !Int
+	, itchUpload_size :: !Integer
 	, itchUpload_p_windows :: !Bool
 	, itchUpload_p_linux :: !Bool
 	, itchUpload_p_osx :: !Bool
@@ -250,7 +251,7 @@ instance A.FromJSON ItchUpload where
 		{ A.fieldLabelModifier = drop 11
 		}
 
-newtype ItchBuildId = ItchBuildId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON)
+newtype ItchBuildId = ItchBuildId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON, Hashable)
 data ItchBuild = ItchBuild
 	{ itchBuild_id :: !ItchBuildId
 	, itchBuild_version :: !Word64
@@ -264,4 +265,4 @@ instance A.FromJSON ItchBuild where
 		{ A.fieldLabelModifier = drop 10
 		}
 
-newtype ItchDownloadKeyId = ItchDownloadKeyId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON)
+newtype ItchDownloadKeyId = ItchDownloadKeyId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON, Hashable)

@@ -293,7 +293,7 @@ parseFile name path mime = do
 			_ -> []
 		let neededDeps = flip map neededLibraries $ \library -> ReportDep
 			{ reportDep_name = library
-			, reportDep_version = T.empty
+			, reportDep_version = ReportDepVersion []
 			}
 		-- calculate glibc version
 		let glibcVersions = concat $ flip map (T.lines readelfOutput) $ \case
@@ -302,8 +302,7 @@ parseFile name path mime = do
 		let deps = if null glibcVersions then neededDeps
 			else ReportDep
 				{ reportDep_name = "GLIBC"
-				, reportDep_version = T.intercalate "." $ map (T.pack . show)
-					(maximum $ map (map (read . T.unpack) . T.splitOn ".") glibcVersions :: [Int])
+				, reportDep_version = ReportDepVersion $ maximum $ map (map (read . T.unpack) . T.splitOn ".") glibcVersions
 				} : neededDeps
 		addParse $ ReportParse_binaryElf ReportBinaryElf
 			{ reportBinaryElf_arch = arch
