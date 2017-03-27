@@ -3,43 +3,15 @@ Module: Itchy.Localization
 Description: Localization
 -}
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, LambdaCase #-}
-
 module Itchy.Localization
-	( RichText(..)
-	, RichChunk(..)
-	, Localization(..)
+	( Localization(..)
 	) where
 
 import Data.Monoid()
-import Data.String
 import qualified Data.Text as T
-import qualified Text.Blaze as TB
-import qualified Text.Blaze.Html5 as H
-import qualified Text.Blaze.Html5.Attributes as A
+import Itchy.Report.Record
 
-newtype RichText = RichText [RichChunk] deriving (Eq, Ord, Monoid)
-
-instance IsString RichText where
-	fromString s = RichText [fromString s]
-
-instance TB.ToMarkup RichText where
-	toMarkup (RichText chunks) = mconcat $ map TB.toMarkup chunks
-
-data RichChunk
-	= RichChunkText !T.Text
-	| RichChunkLink !T.Text !T.Text
-	| RichChunkCode !T.Text
-	deriving (Eq, Ord)
-
-instance IsString RichChunk where
-	fromString = RichChunkText . T.pack
-
-instance TB.ToMarkup RichChunk where
-	toMarkup = \case
-		RichChunkText t -> H.toHtml t
-		RichChunkLink l t -> H.a H.! A.href (H.toValue l) $ H.toHtml t
-		RichChunkCode t -> H.code $ H.toHtml t
+import Itchy.Localization.RichText
 
 data Localization = Localization
 	{ locLanguageName :: !T.Text
@@ -66,6 +38,7 @@ data Localization = Localization
 	, locRecordScope :: !T.Text
 	, locRecordName :: !T.Text
 	, locRecordMessage :: !T.Text
+	, locScopeUploadGroup :: !(UploadGroup -> RichText)
 	, locScopeUpload :: !(Maybe T.Text -> RichText)
 	, locScopeEntry :: !(Maybe T.Text -> T.Text -> RichText)
 	, locSeverityOk :: !T.Text
@@ -90,5 +63,15 @@ data Localization = Localization
 	, locMessageBinariesCoverPlatforms :: !RichText
 	, locRecordBinariesPlatformsMismatch :: !RichText
 	, locMessageBinariesPlatformsMismatch :: !RichText
+	, locRecordWindowsBinaryX86Exists :: !RichText
+	, locRecordNoWindowsBinaryX86 :: !RichText
+	, locMessageAboutWindowsBinaryX86 :: !RichText
+	, locRecordNoLinuxBinaryX64 :: !RichText
+	, locMessageNoLinuxBinaryX64 :: !RichText
+	, locRecordNoLinuxBinaryX86 :: !RichText
+	, locMessageNoLinuxBinaryX86 :: !RichText
+	, locRecordMacOSBinaryX86Exists :: !RichText
+	, locRecordNoMacOSBinaryX86 :: !RichText
+	, locMessageAboutMacOSBinaryX86 :: !RichText
 	, locRecordNoUploads :: !RichText
 	}

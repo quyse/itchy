@@ -333,16 +333,17 @@ parseFile name path mime = do
 	-- Mach-O (macOS)
 	when (mime == "application/x-mach-binary") $ do
 		-- get list of subbinaries and their dependencies
-		otoolOutput <- T.pack <$> P.readProcess "otool" ["-L", T.unpack path] ""
-		let foldSubbinary subbinaries line = case reverse $ T.words line of
-			(arch : "(architecture" : _) -> ReportMachOSubBinary
-				{ reportMachoSubBinary_arch = case arch of
-					"x86_64):" -> ReportArch_x64
-					"i386):" -> ReportArch_x86
-					_ -> ReportArch_unknown
+		otoolOutput <- T.pack <$> P.readProcess "otool" ["-hvL", T.unpack path] ""
+		let foldSubbinary subbinaries line = case line of
+			(T.words -> ("MH_MAGIC_64" : "X86_64" : _)) -> ReportMachOSubBinary
+				{ reportMachoSubBinary_arch = ReportArch_x64
 				, reportMachoSubBinary_deps = []
 				} : subbinaries
-			(_depCurrentVersion : "version" : "current" : depCompatibilityVersion : "version" : "(compatibility" : depName) -> case subbinaries of
+			(T.words -> ("MH_MAGIC" : "I386" : _)) -> ReportMachOSubBinary
+				{ reportMachoSubBinary_arch = ReportArch_x86
+				, reportMachoSubBinary_deps = []
+				} : subbinaries
+			(reverse . T.words -> (_depCurrentVersion : "version" : "current" : depCompatibilityVersion : "version" : "(compatibility" : depName)) -> case subbinaries of
 				subbinary : restSubbinaries -> subbinary
 					{ reportMachoSubBinary_deps = ReportDep
 						{ reportDep_name = T.intercalate " " depName -- may be wrong :(

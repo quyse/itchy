@@ -25,6 +25,7 @@ module Itchy.Report
 	) where
 
 import qualified Data.Aeson.Types as A
+import Data.Hashable
 import qualified Data.Map.Strict as M
 import qualified Data.Serialize as S
 import Data.Serialize.Text()
@@ -194,8 +195,9 @@ data ReportArch
 	= ReportArch_unknown
 	| ReportArch_x86
 	| ReportArch_x64
-	deriving Generic
+	deriving (Eq, Ord, Generic)
 instance S.Serialize ReportArch
+instance Hashable ReportArch
 instance A.ToJSON ReportArch where
 	toJSON = A.genericToJSON jsonOptions
 instance A.FromJSON ReportArch where

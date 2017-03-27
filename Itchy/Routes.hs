@@ -191,9 +191,15 @@ getGameR gameId = W.runHandlerM $ do
 				h2 $ toHtml $ locReport loc
 				let AnalysisGame
 					{ analysisGame_uploads = analysisUploads
-					-- , analysisGame_release = analysisReleaseUploadGroup
-					-- , analysisGame_preorder = analysisPreorderUploadGroup
-					-- , analysisGame_demo = analysisDemoUploadGroup
+					, analysisGame_release = AnalysisUploadGroup
+						{ analysisUploadGroup_records = releaseGroupRecords
+						}
+					, analysisGame_preorder = AnalysisUploadGroup
+						{ analysisUploadGroup_records = preorderGroupRecords
+						}
+					, analysisGame_demo = AnalysisUploadGroup
+						{ analysisUploadGroup_records = demoGroupRecords
+						}
 					, analysisGame_records = gameRecords
 					} = analyseGame loc game $ concat $
 					flip Prelude.map (zip gameUploads maybeReports) $
@@ -202,7 +208,13 @@ getGameR gameId = W.runHandlerM $ do
 					Nothing -> []
 
 				let uploadsRecords = concat $ Prelude.map analysisUpload_records analysisUploads
-				let records = flip sortOn (gameRecords <> uploadsRecords) $ \Record
+				let records = flip sortOn
+					(  gameRecords
+					<> releaseGroupRecords
+					<> preorderGroupRecords
+					<> demoGroupRecords
+					<> uploadsRecords
+					) $ \Record
 					{ recordScope = scope
 					, recordSeverity = severity
 					, recordName = name
@@ -232,6 +244,7 @@ getGameR gameId = W.runHandlerM $ do
 							H.td ! A.class_ "status" $ H.div $ toHtml ttl
 							H.td $ toHtml $ case scope of
 								GameScope -> mempty
+								UploadGroupScope uploadGroup -> locScopeUploadGroup loc uploadGroup
 								UploadScope uploadId -> locScopeUpload loc (uploadName uploadId)
 								EntryScope uploadId entryPath -> locScopeEntry loc (uploadName uploadId) (T.intercalate "/" entryPath)
 							H.td $ H.div $ toHtml name

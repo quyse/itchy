@@ -3,7 +3,7 @@ Module: Itchy.Localization.Ru
 Description: Russian localization.
 -}
 
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings #-}
 
 module Itchy.Localization.Ru
 	( localizationRu
@@ -15,6 +15,8 @@ import qualified Data.Text as T
 import Numeric
 
 import Itchy.Localization
+import Itchy.Localization.RichText
+import Itchy.Report.Record
 
 localizationRu :: Localization
 localizationRu = Localization
@@ -46,14 +48,18 @@ localizationRu = Localization
 	, locRecordScope = "Субъект"
 	, locRecordName = "Тест"
 	, locRecordMessage = "Комментарий"
+	, locScopeUploadGroup = \case
+		UploadGroupRelease -> "Релизные пакеты"
+		UploadGroupPreorder -> "Предзаказ-пакеты"
+		UploadGroupDemo -> "Демо пакеты"
 	, locScopeUpload = \maybeUpload -> RichText [RichChunkCode $ fromMaybe "<?>" maybeUpload]
 	, locScopeEntry = \maybeUpload entry -> RichText [RichChunkCode (fromMaybe "<?>" maybeUpload), RichChunkText ": ", RichChunkCode entry]
-	, locSeverityOk = "OK"
+	, locSeverityOk = "НОРМ"
 	, locSeverityInfo = "ИНФО"
 	, locSeverityTip = "СОВЕТ"
-	, locSeverityWarn = "ПРЕД"
+	, locSeverityWarn = "ХММ..."
 	, locSeverityBad = "ЖОПА"
-	, locSeverityErr = "ПРОБЛ"
+	, locSeverityErr = "ТРАБЛ"
 	, locRecordUploadDisplayNameSet = "Отображаемое имя задано"
 	, locRecordUploadDisplayNameNotSet = "Отображаемое имя не задано"
 	, locMessageUploadDisplayNameNotSet = "Сейчас пакет отображается в виде его имени файла, но вы можете задать любое отображаемое название."
@@ -70,5 +76,15 @@ localizationRu = Localization
 	, locMessageBinariesCoverPlatforms = "Исполняемые файлы были найдены для каждой платформы, указанной в тегах пакета."
 	, locRecordBinariesPlatformsMismatch = "Бинарники и теги не совпадают"
 	, locMessageBinariesPlatformsMismatch = "Бинарники и теги не совпадают"
+	, locRecordWindowsBinaryX86Exists = "Есть 32-битная версия для Windows"
+	, locRecordNoWindowsBinaryX86 = "Нет 32-битной версии для Windows"
+	, locMessageAboutWindowsBinaryX86 = "64-битные исполняемые файлы не могут быть запущены на 32-битных Windows-системах, которые всё ещё встречаются у игроков. Лучше предоставлять 32-битный исполняемый файл, который спокойно работает и на 32-х, и на 64-битных системах."
+	, locRecordNoLinuxBinaryX64 = "Нет 64-битной версии для Linux"
+	, locMessageNoLinuxBinaryX64 = "Сейчас большинство Linux систем 64-битные. На 64-битном Linux, в отличие от других ОС, 32-битные программы обычно не запускаются \"из коробки\", и может потребоваться поставить дополнительные библиотеки (\"multilib\"). Рекомендуется предоставлять 64-битную версию вдобавок к 32-битной, чтобы не создавать лишних трудностей большинству игроков."
+	, locRecordNoLinuxBinaryX86 = "Нет 32-битной версии для Linux"
+	, locMessageNoLinuxBinaryX86 = "Запуск 64-битных программ невозможен на 32-битных Linux-системах, которые всё ещё встречаются у игроков. Рекомендуется предоставлять 32-битный исполняемый файл вдобавок к 64-битному."
+	, locRecordMacOSBinaryX86Exists = "Есть 32-битная версия для macOS"
+	, locRecordNoMacOSBinaryX86 = "Нет 32-битной версии для macOS"
+	, locMessageAboutMacOSBinaryX86 = "Запуск 64-битных программ невозможен на 32-битных macOS-системах, которые всё ещё используются. Рекомендуется предоставлять 32-битный исполняемый файл вдобавок к 64-битному, или единый универсальный исполняемый файл, поддерживающий обе архитектуры."
 	, locRecordNoUploads = "Нет пакетов"
 	}

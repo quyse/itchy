@@ -20,6 +20,7 @@ executable itchyd
     Itchy.ItchInvestigator
     Itchy.Localization
     Itchy.Localization.En
+    Itchy.Localization.RichText
     Itchy.Localization.Ru
     Itchy.Report
     Itchy.Report.Analysis

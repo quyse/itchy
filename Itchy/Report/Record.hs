@@ -7,12 +7,13 @@ module Itchy.Report.Record
 	( Record(..)
 	, Severity(..)
 	, Scope(..)
+	, UploadGroup(..)
 	) where
 
 import qualified Data.Text as T
 
 import Itchy.Itch
-import Itchy.Localization
+import Itchy.Localization.RichText
 
 data Record = Record
 	{ recordScope :: !Scope
@@ -23,8 +24,15 @@ data Record = Record
 
 data Scope
 	= GameScope
+	| UploadGroupScope !UploadGroup
 	| UploadScope {-# UNPACK #-} !ItchUploadId
 	| EntryScope {-# UNPACK #-} !ItchUploadId [T.Text]
+	deriving (Eq, Ord)
+
+data UploadGroup
+	= UploadGroupRelease
+	| UploadGroupPreorder
+	| UploadGroupDemo
 	deriving (Eq, Ord)
 
 data Severity
