@@ -313,7 +313,29 @@ parseFile name path mime = do
 	-- when (mime == "application/x-dosexec")
 
 	-- Mach-O (macOS)
-	-- when (mime == "application/x-mach-binary")
+	when (mime == "application/x-mach-binary") $ do
+		-- get list of subbinaries and their dependencies
+		otoolOutput <- T.pack <$> P.readProcess "otool" ["-L", T.unpack path] ""
+		let foldSubbinary subbinaries line = case reverse $ T.words line of
+			(arch : "(architecture" : _) -> ReportMachOSubBinary
+				{ reportMachoSubBinary_arch = case arch of
+					"x86_64):" -> ReportArch_x64
+					"i386):" -> ReportArch_x86
+					_ -> ReportArch_unknown
+				, reportMachoSubBinary_deps = []
+				} : subbinaries
+			(_depCurrentVersion : "version" : "current" : depCompatibilityVersion : "version" : "(compatibility" : depName) -> case subbinaries of
+				subbinary : restSubbinaries -> subbinary
+					{ reportMachoSubBinary_deps = ReportDep
+						{ reportDep_name = T.intercalate " " depName -- may be wrong :(
+						, reportDep_version = ReportDepVersion $ map (read . T.unpack) $ T.splitOn "." $ fromMaybe depCompatibilityVersion $ T.stripSuffix "," depCompatibilityVersion
+						} : reportMachoSubBinary_deps subbinary
+					} : restSubbinaries
+				[] -> []
+			_ -> subbinaries
+		addParse $ ReportParse_binaryMachO ReportBinaryMachO
+			{ reportBinary_binaries = foldl foldSubbinary [] $ T.lines otoolOutput
+			}
 
 	-- parse .itch.toml
 	when (name == ".itch.toml") $ addParse =<< let
