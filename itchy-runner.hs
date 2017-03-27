@@ -306,6 +306,7 @@ parseFile name path mime = do
 				} : neededDeps
 		addParse $ ReportParse_binaryElf ReportBinaryElf
 			{ reportBinaryElf_arch = arch
+			, reportBinaryElf_isLibrary = mime == "application/x-sharedlib"
 			, reportBinaryElf_deps = deps
 			}
 
@@ -325,6 +326,7 @@ parseFile name path mime = do
 			_ -> binary
 		addParse $ ReportParse_binaryPe $ foldl foldBinary ReportBinaryPe
 			{ reportBinaryPe_arch = ReportArch_unknown
+			, reportBinaryPe_isLibrary = T.isSuffixOf ".dll" name
 			, reportBinaryPe_deps = []
 			} $ T.lines objdumpOutput
 
@@ -350,7 +352,8 @@ parseFile name path mime = do
 				[] -> []
 			_ -> subbinaries
 		addParse $ ReportParse_binaryMachO ReportBinaryMachO
-			{ reportBinary_binaries = foldl foldSubbinary [] $ T.lines otoolOutput
+			{ reportBinaryMachO_binaries = foldl foldSubbinary [] $ T.lines otoolOutput
+			, reportBinaryMachO_isLibrary = T.isSuffixOf ".dylib" name
 			}
 
 	-- parse .itch.toml

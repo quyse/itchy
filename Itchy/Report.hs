@@ -150,6 +150,7 @@ instance A.FromJSON ItchTomlAction where
 
 data ReportBinaryPe = ReportBinaryPe
 	{ reportBinaryPe_arch :: !ReportArch
+	, reportBinaryPe_isLibrary :: !Bool
 	, reportBinaryPe_deps :: [ReportDep]
 	} deriving Generic
 instance S.Serialize ReportBinaryPe
@@ -160,6 +161,7 @@ instance A.FromJSON ReportBinaryPe where
 
 data ReportBinaryElf = ReportBinaryElf
 	{ reportBinaryElf_arch :: !ReportArch
+	, reportBinaryElf_isLibrary :: !Bool
 	, reportBinaryElf_deps :: [ReportDep]
 	} deriving Generic
 instance S.Serialize ReportBinaryElf
@@ -169,7 +171,8 @@ instance A.FromJSON ReportBinaryElf where
 	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportBinaryMachO = ReportBinaryMachO
-	{ reportBinary_binaries :: [ReportMachOSubBinary]
+	{ reportBinaryMachO_binaries :: [ReportMachOSubBinary]
+	, reportBinaryMachO_isLibrary :: !Bool
 	} deriving Generic
 instance S.Serialize ReportBinaryMachO
 instance A.ToJSON ReportBinaryMachO where

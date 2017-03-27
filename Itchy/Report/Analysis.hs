@@ -187,7 +187,7 @@ analyseUpload loc itchUpload@ItchUpload
 			{ -- reportBinaryElf_arch = arch
 			} -> HS.insert PlatformLinux platforms
 		ReportParse_binaryMachO
-			{ -- reportBinary_binaries = subBinaries
+			{ -- reportBinaryMachO_binaries = subBinaries
 			} -> HS.insert PlatformMacOS platforms
 		_ -> platforms
 
