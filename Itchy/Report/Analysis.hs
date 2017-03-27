@@ -209,7 +209,7 @@ analyseUploadGroup loc (UploadGroupScope -> scope) uploads = AnalysisUploadGroup
 					{ recordScope = scope
 					, recordSeverity = SeverityOk
 					, recordName = locRecordWindowsBinaryX86Exists loc
-					, recordMessage = mempty
+					, recordMessage = locMessageAboutWindowsBinaryX86 loc
 					}]
 				else [Record
 					{ recordScope = scope
