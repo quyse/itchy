@@ -310,7 +310,23 @@ parseFile name path mime = do
 			}
 
 	-- EXE (Windows)
-	-- when (mime == "application/x-dosexec")
+	when (mime == "application/x-dosexec") $ do
+		-- get file format
+		objdumpOutput <- T.pack <$> P.readProcess "objdump" ["-a", T.unpack path] ""
+		let foldBinary binary line = case reverse $ T.words line of
+			(format : "format" : "file" : _) -> case format of
+				"pei-x86-64" -> binary
+					{ reportBinaryPe_arch = ReportArch_x64
+					}
+				"pei-i386" -> binary
+					{ reportBinaryPe_arch = ReportArch_x86
+					}
+				_ -> binary
+			_ -> binary
+		addParse $ ReportParse_binaryPe $ foldl foldBinary ReportBinaryPe
+			{ reportBinaryPe_arch = ReportArch_unknown
+			, reportBinaryPe_deps = []
+			} $ T.lines objdumpOutput
 
 	-- Mach-O (macOS)
 	when (mime == "application/x-mach-binary") $ do
