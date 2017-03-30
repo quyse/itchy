@@ -44,10 +44,9 @@ localizationRu = Localization
 		else if size < 2 * 1024 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024) :: Float) "") <> " Мб"
 		else T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024 * 1024) :: Float) "") <> " Гб"
 	, locReport = "Отчёт"
-	, locRecordSeverity = "Важность"
+	, locRecordSeverity = "Статус"
 	, locRecordScope = "Субъект"
 	, locRecordName = "Тест"
-	, locRecordMessage = "Комментарий"
 	, locScopeUploadGroup = \case
 		UploadGroupRelease -> "Релизные пакеты"
 		UploadGroupPreorder -> "Предзаказ-пакеты"

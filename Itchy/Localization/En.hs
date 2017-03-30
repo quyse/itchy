@@ -47,7 +47,6 @@ localizationEn = Localization
 	, locRecordSeverity = "Severity"
 	, locRecordScope = "Scope"
 	, locRecordName = "Test"
-	, locRecordMessage = "Description"
 	, locScopeUploadGroup = \case
 		UploadGroupRelease -> "Release Uploads"
 		UploadGroupPreorder -> "Preorder Uploads"

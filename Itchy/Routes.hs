@@ -34,6 +34,7 @@ import Itchy.Itch
 import Itchy.ItchCache
 import Itchy.Localization
 import Itchy.Localization.En
+import Itchy.Localization.RichText
 import Itchy.Localization.Ru
 import Itchy.Report.Analysis
 import Itchy.Report.Record
@@ -224,9 +225,8 @@ getGameR gameId = W.runHandlerM $ do
 				H.table $ do
 					H.tr $ do
 						H.th $ toHtml $ locRecordSeverity loc
-						H.th $ toHtml $ locRecordScope loc
-						H.th $ toHtml $ locRecordName loc
-						H.th $ toHtml $ locRecordMessage loc
+						H.th ! A.class_ "scope" $ toHtml $ locRecordScope loc
+						H.th ! A.class_ "name" $ toHtml $ locRecordName loc
 					forM_ records $ \Record
 						{ recordScope = scope
 						, recordSeverity = severity
@@ -247,8 +247,10 @@ getGameR gameId = W.runHandlerM $ do
 								UploadGroupScope uploadGroup -> locScopeUploadGroup loc uploadGroup
 								UploadScope uploadId -> locScopeUpload loc (uploadName uploadId)
 								EntryScope uploadId entryPath -> locScopeEntry loc (uploadName uploadId) (T.intercalate "/" entryPath)
-							H.td $ H.div $ toHtml name
-							H.td $ toHtml message
+							H.td $ H.div ! A.class_ "record" $ do
+								toHtml name
+								unless (message == RichText []) $
+									H.div ! A.class_ "message" $ toHtml message
 
 				forM_ (zip gameUploads maybeReports) $ \((ItchUpload
 					{ itchUpload_id = ItchUploadId uploadId

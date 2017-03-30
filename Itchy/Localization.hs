@@ -37,7 +37,6 @@ data Localization = Localization
 	, locRecordSeverity :: !T.Text
 	, locRecordScope :: !T.Text
 	, locRecordName :: !T.Text
-	, locRecordMessage :: !T.Text
 	, locScopeUploadGroup :: !(UploadGroup -> RichText)
 	, locScopeUpload :: !(Maybe T.Text -> RichText)
 	, locScopeEntry :: !(Maybe T.Text -> T.Text -> RichText)
