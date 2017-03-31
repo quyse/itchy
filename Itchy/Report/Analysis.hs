@@ -3,7 +3,7 @@ Module: Itchy.Report.Analysis
 Description: Report analysis structures.
 -}
 
-{-# LANGUAGE DeriveGeneric, LambdaCase, PatternSynonyms, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, LambdaCase, OverloadedStrings, PatternSynonyms, ViewPatterns #-}
 
 module Itchy.Report.Analysis
 	( AnalysisGame(..)
@@ -56,7 +56,7 @@ instance Hashable Platform where
 
 analyseUpload :: Localization -> ItchUpload -> Report -> AnalysisUpload
 analyseUpload loc itchUpload@ItchUpload
-	{ itchUpload_id = UploadScope -> scope
+	{ itchUpload_id = uploadId@(UploadScope -> scope)
 	, itchUpload_display_name = maybeDisplayName
 	, itchUpload_p_windows = tagWindows
 	, itchUpload_p_linux = tagLinux
@@ -72,6 +72,7 @@ analyseUpload loc itchUpload@ItchUpload
 		: avCheckRecord
 		: generalErrorCheckRecords
 		++ unpackCheckRecords
+		++ glibcVersionCheckRecords
 	} where
 	-- check for having display name
 	displayNameCheckRecord = case maybeDisplayName of
@@ -122,6 +123,13 @@ analyseUpload loc itchUpload@ItchUpload
 			, recordName = locRecordAVCheckFailed loc
 			, recordMessage = RichText [RichChunkCode e]
 			}
+	distroVersions =
+		[ (("Ubuntu 12.04 \"precise\"", SeverityOk), ReportDepVersion [2, 15])
+		, (("Ubuntu 14.04 \"trusty\"", SeverityWarn), ReportDepVersion [2, 19])
+		, (("Ubuntu 16.04 \"xenial\"", SeverityWarn), ReportDepVersion [2, 23])
+		, (("Ubuntu 16.10 \"yakkety\"", SeverityWarn), ReportDepVersion [2, 24, 3])
+		, (("Ubuntu 17.04 \"zesty\"", SeverityWarn), ReportDepVersion [2, 24, 7])
+		]
 	-- checks related to unpack
 	unpackCheckRecords = case report_unpack report of
 		ReportUnpack_notStarted -> [Record
@@ -194,6 +202,46 @@ analyseUpload loc itchUpload@ItchUpload
 			{ reportMachoSubBinary_arch = arch
 			} -> (PlatformMacOS, arch)
 		_ -> platforms
+	-- GLIBC version check
+	glibcVersionCheckRecords =
+		if HS.member PlatformLinux tagsPlatforms then entriesGlibcVersionCheckRecords
+		else []
+	entriesGlibcVersionCheckRecords = foldEntriesGlibcCheckRecords uploadEntries [] []
+	foldEntriesGlibcCheckRecords entries entriesPath records = let
+		foldEntryGlibcCheckRecords (entryName, entry) records = let
+			entryPath = entriesPath ++ [entryName]
+			entryScope = EntryScope uploadId entryPath
+			foldParseGlibcCheckRecords parse records = case parse of
+				ReportParse_binaryElf ReportBinaryElf
+					{ reportBinaryElf_deps = deps
+					} -> case filter (("GLIBC" ==) . reportDep_name) deps of
+					(ReportDep
+						{ reportDep_version = glibcVersion
+						} : _) -> foldDepGlibcCheckRecords glibcVersion records
+					[] -> records
+				_ -> records
+			foldDepGlibcCheckRecords glibcVersion records = case dropWhile ((< glibcVersion) . snd) distroVersions of
+				(((distroName, severity), distroGlibcVersion) : _) -> Record
+					{ recordScope = entryScope
+					, recordSeverity = severity
+					, recordName = locRecordDepVersionTooHigh loc "GLIBC"
+					, recordMessage = locMessageDepVersionTooHigh loc "GLIBC" glibcVersion distroName distroGlibcVersion
+					} : records
+				[] -> Record
+					{ recordScope = entryScope
+					, recordSeverity = SeverityBad
+					, recordName = locRecordDepVersionTooHigh loc "GLIBC"
+					, recordMessage = mempty
+					} : records
+			in case entry of
+				ReportEntry_file
+					{ reportEntry_parses = parses
+					} -> foldr foldParseGlibcCheckRecords records parses
+				ReportEntry_directory
+					{ reportEntry_entries = entries
+					} -> foldEntriesGlibcCheckRecords entries entryPath records
+				_ -> records
+		in foldr foldEntryGlibcCheckRecords records $ M.toList entries
 
 analyseUploadGroup :: Localization -> UploadGroup -> [AnalysisUpload] -> AnalysisUploadGroup
 analyseUploadGroup loc (UploadGroupScope -> scope) uploads = AnalysisUploadGroup
@@ -320,7 +368,7 @@ analyseGame loc ItchGame
 	noUploadsCheckRecords =
 		if null uploads then [Record
 			{ recordScope = ProjectScope
-			, recordSeverity = SeverityBad
+			, recordSeverity = SeverityInfo
 			, recordName = locRecordNoUploads loc
 			, recordMessage = mempty
 			}]

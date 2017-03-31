@@ -3,7 +3,7 @@ Module: Itchy.Report
 Description: Report structures.
 -}
 
-{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving, OverloadedStrings #-}
 
 module Itchy.Report
 	( Report(..)
@@ -22,6 +22,7 @@ module Itchy.Report
 	, ReportArch(..)
 	, ReportDep(..)
 	, ReportDepVersion(..)
+	, reportDepVersionToText
 	) where
 
 import qualified Data.Aeson.Types as A
@@ -215,6 +216,9 @@ instance A.FromJSON ReportDep where
 
 newtype ReportDepVersion = ReportDepVersion [Integer]
 	deriving (Generic, Eq, Ord, S.Serialize, A.ToJSON, A.FromJSON)
+
+reportDepVersionToText :: ReportDepVersion -> T.Text
+reportDepVersionToText (ReportDepVersion numbers) = T.intercalate "." $ map (T.pack . show) numbers
 
 jsonOptions :: A.Options
 jsonOptions = A.defaultOptions

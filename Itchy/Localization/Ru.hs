@@ -3,7 +3,7 @@ Module: Itchy.Localization.Ru
 Description: Russian localization.
 -}
 
-{-# LANGUAGE LambdaCase, OverloadedStrings #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings, ViewPatterns #-}
 
 module Itchy.Localization.Ru
 	( localizationRu
@@ -16,6 +16,7 @@ import Numeric
 
 import Itchy.Localization
 import Itchy.Localization.RichText
+import Itchy.Report
 import Itchy.Report.Record
 
 localizationRu :: Localization
@@ -70,6 +71,12 @@ localizationRu = Localization
 	, locRecordAVCheckFailed = "Антивирусная проверка провалена"
 	, locRecordUnpackNotStarted = "Распаковка не выполнена"
 	, locRecordUnpackFailed = "Распаковка завершилась с ошибкой"
+	, locRecordDepVersionTooHigh = \depName -> RichText ["Требуемая версия ", RichChunkCode depName, " слишком высокая"]
+	, locMessageDepVersionTooHigh = \depName (reportDepVersionToText -> depVersion) distroName (reportDepVersionToText -> distroVersion) -> RichText
+		[ "Требуемая версия ", RichChunkCode depName, " - ", RichChunkCode depVersion
+		, " для которой в свою очередь требуется дистрибутив не ниже ", RichChunkCode distroName
+		, " (содержащий ", RichChunkCode depName, " ", RichChunkCode distroVersion, ")."
+		]
 	, locRecordNoBinaries = "Бинарники не найдены"
 	, locMessageNoBinaries = "В данном пакете не найдено ни одного исполняемого файла. Это нормально для неисполняемого пакета, такого как книга, саундтрек, пак ассетов."
 	, locRecordBinariesCoverPlatforms = "Есть бинарники для всех указанных платформ"

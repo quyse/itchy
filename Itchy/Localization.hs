@@ -9,9 +9,10 @@ module Itchy.Localization
 
 import Data.Monoid()
 import qualified Data.Text as T
-import Itchy.Report.Record
 
 import Itchy.Localization.RichText
+import Itchy.Report
+import Itchy.Report.Record
 
 data Localization = Localization
 	{ locLanguageName :: !T.Text
@@ -57,6 +58,8 @@ data Localization = Localization
 	, locRecordAVCheckFailed :: !RichText
 	, locRecordUnpackNotStarted :: !RichText
 	, locRecordUnpackFailed :: !RichText
+	, locRecordDepVersionTooHigh :: !(T.Text -> RichText)
+	, locMessageDepVersionTooHigh :: !(T.Text -> ReportDepVersion -> T.Text -> ReportDepVersion -> RichText)
 	, locRecordNoBinaries :: !RichText
 	, locMessageNoBinaries :: !RichText
 	, locRecordBinariesCoverPlatforms :: !RichText

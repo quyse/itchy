@@ -3,7 +3,7 @@ Module: Itchy.Localization.En
 Description: English localization.
 -}
 
-{-# LANGUAGE LambdaCase, OverloadedStrings #-}
+{-# LANGUAGE LambdaCase, OverloadedStrings, ViewPatterns #-}
 
 module Itchy.Localization.En
 	( localizationEn
@@ -16,6 +16,7 @@ import Numeric
 
 import Itchy.Localization
 import Itchy.Localization.RichText
+import Itchy.Report
 import Itchy.Report.Record
 
 localizationEn :: Localization
@@ -53,7 +54,7 @@ localizationEn = Localization
 		UploadGroupPreorder -> "Preorder Uploads"
 		UploadGroupDemo -> "Demo Uploads"
 	, locScopeUpload = \maybeUpload -> RichText [RichChunkCode $ fromMaybe "<?>" maybeUpload]
-	, locScopeEntry = \maybeUpload entry -> RichText [RichChunkCode (fromMaybe "<?>" maybeUpload), RichChunkText ": ", RichChunkCode entry]
+	, locScopeEntry = \maybeUpload entry -> RichText [RichChunkCode (fromMaybe "<?>" maybeUpload), ": ", RichChunkCode entry]
 	, locSeverityOk = "OK"
 	, locSeverityInfo = "INFO"
 	, locSeverityTip = "TIP"
@@ -70,6 +71,12 @@ localizationEn = Localization
 	, locRecordAVCheckFailed = "AV check failed"
 	, locRecordUnpackNotStarted = "Unpacking package skipped"
 	, locRecordUnpackFailed = "Unpacking package failed"
+	, locRecordDepVersionTooHigh = \depName -> RichText ["Required version of ", RichChunkCode depName, " is too high"]
+	, locMessageDepVersionTooHigh = \depName (reportDepVersionToText -> depVersion) distroName (reportDepVersionToText -> distroVersion) -> RichText
+		[ "Required version for ", RichChunkCode depName, " is ", RichChunkCode depVersion
+		, " which in turn requires at least ", RichChunkCode distroName
+		, " (containing ", RichChunkCode depName, " ", RichChunkCode distroVersion, ")."
+		]
 	, locRecordNoBinaries = "No binaries found"
 	, locMessageNoBinaries = "No binaries found in this upload. It's totally OK if it's a non-executable package like book, soundtrack or asset pack."
 	, locRecordBinariesCoverPlatforms = "Binaries exist for all declared platforms"
