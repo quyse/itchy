@@ -44,9 +44,10 @@ localizationEn = Localization
 		else if size < 2 * 1024 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024) :: Float) "") <> " Mb"
 		else T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024 * 1024) :: Float) "") <> " Gb"
 	, locReport = "Report"
-	, locRecordSeverity = "Severity"
+	, locRecordSeverity = "Status"
 	, locRecordScope = "Scope"
 	, locRecordName = "Test"
+	, locScopeProject = "Project"
 	, locScopeUploadGroup = \case
 		UploadGroupRelease -> "Release Uploads"
 		UploadGroupPreorder -> "Preorder Uploads"
@@ -85,5 +86,11 @@ localizationEn = Localization
 	, locRecordMacOSBinaryX86Exists = "There's 32-bit macOS binary"
 	, locRecordNoMacOSBinaryX86 = "No 32-bit macOS binary"
 	, locMessageAboutMacOSBinaryX86 = "It's impossible to run 64-bit program on 32-bit macOS system, which's still in use. The recommendation is to provide 32-bit version in addition to 64-bit, or a single universal binary supporting both architectures."
+	, locRecordHasDemo = "Free demo available"
+	, locRecordNoDemo = "No free demo"
+	, locMessageAboutDemo = "You can provide free demo, so players can evaluate your game before buying."
+	, locRecordOptedIntoPressSystem = "Opted into itch.io press system"
+	, locRecordNotOptedIntoPressSystem = "Not opted into itch.io press system"
+	, locMessageAboutPressSystem = "You can opt your account into itch.io's press system, this will enable special press account users to find your paid games and download it for free."
 	, locRecordNoUploads = "There're no uploads"
 	}

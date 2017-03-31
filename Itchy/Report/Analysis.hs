@@ -250,7 +250,11 @@ analyseUploadGroup loc (UploadGroupScope -> scope) uploads = AnalysisUploadGroup
 		]
 
 analyseGame :: Localization -> ItchGame -> [(ItchUpload, Report)] -> AnalysisGame
-analyseGame loc _game uploads = AnalysisGame
+analyseGame loc ItchGame
+	{ itchGame_in_press_system = gameInPressSystem
+	, itchGame_has_demo = gameHasDemo
+	, itchGame_min_price = gameMinPrice
+	} uploads = AnalysisGame
 	{ analysisGame_uploads = analysisUploads
 	, analysisGame_release = analyseUploadGroup loc UploadGroupRelease releaseGroup
 	, analysisGame_preorder = analyseUploadGroup loc UploadGroupPreorder preorderGroup
@@ -281,11 +285,41 @@ analyseGame loc _game uploads = AnalysisGame
 				}
 			} -> True
 		_ -> False
-	records = noUploadsCheckRecords
+	records = paidRecords ++ noUploadsCheckRecords
+	paidRecords =
+		if gameMinPrice > 0 then [gameHasDemoCheckRecord, gameInPressSystemCheckRecord]
+		else []
+	gameHasDemoCheckRecord =
+		if gameHasDemo then Record
+			{ recordScope = ProjectScope
+			, recordSeverity = SeverityOk
+			, recordName = locRecordHasDemo loc
+			, recordMessage = locMessageAboutDemo loc
+			}
+		else Record
+			{ recordScope = ProjectScope
+			, recordSeverity = SeverityTip
+			, recordName = locRecordNoDemo loc
+			, recordMessage = locMessageAboutDemo loc
+			}
+	-- check that there's press access to game
+	gameInPressSystemCheckRecord =
+		if gameInPressSystem then Record
+			{ recordScope = ProjectScope
+			, recordSeverity = SeverityOk
+			, recordName = locRecordOptedIntoPressSystem loc
+			, recordMessage = locMessageAboutPressSystem loc
+			}
+		else Record
+			{ recordScope = ProjectScope
+			, recordSeverity = SeverityTip
+			, recordName = locRecordNotOptedIntoPressSystem loc
+			, recordMessage = locMessageAboutPressSystem loc
+			}
 	-- check that there're some uploads
 	noUploadsCheckRecords =
 		if null uploads then [Record
-			{ recordScope = GameScope
+			{ recordScope = ProjectScope
 			, recordSeverity = SeverityBad
 			, recordName = locRecordNoUploads loc
 			, recordMessage = mempty

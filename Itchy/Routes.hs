@@ -243,7 +243,7 @@ getGameR gameId = W.runHandlerM $ do
 						in H.tr ! A.class_ cls $ do
 							H.td ! A.class_ "status" $ H.div $ toHtml ttl
 							H.td $ toHtml $ case scope of
-								GameScope -> mempty
+								ProjectScope -> locScopeProject loc
 								UploadGroupScope uploadGroup -> locScopeUploadGroup loc uploadGroup
 								UploadScope uploadId -> locScopeUpload loc (uploadName uploadId)
 								EntryScope uploadId entryPath -> locScopeEntry loc (uploadName uploadId) (T.intercalate "/" entryPath)

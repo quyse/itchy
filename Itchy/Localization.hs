@@ -37,6 +37,7 @@ data Localization = Localization
 	, locRecordSeverity :: !T.Text
 	, locRecordScope :: !T.Text
 	, locRecordName :: !T.Text
+	, locScopeProject :: !RichText
 	, locScopeUploadGroup :: !(UploadGroup -> RichText)
 	, locScopeUpload :: !(Maybe T.Text -> RichText)
 	, locScopeEntry :: !(Maybe T.Text -> T.Text -> RichText)
@@ -72,5 +73,11 @@ data Localization = Localization
 	, locRecordMacOSBinaryX86Exists :: !RichText
 	, locRecordNoMacOSBinaryX86 :: !RichText
 	, locMessageAboutMacOSBinaryX86 :: !RichText
+	, locRecordHasDemo :: !RichText
+	, locRecordNoDemo :: !RichText
+	, locMessageAboutDemo :: !RichText
+	, locRecordOptedIntoPressSystem :: !RichText
+	, locRecordNotOptedIntoPressSystem :: !RichText
+	, locMessageAboutPressSystem :: !RichText
 	, locRecordNoUploads :: !RichText
 	}

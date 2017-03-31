@@ -47,6 +47,7 @@ localizationRu = Localization
 	, locRecordSeverity = "Статус"
 	, locRecordScope = "Субъект"
 	, locRecordName = "Тест"
+	, locScopeProject = "Проект"
 	, locScopeUploadGroup = \case
 		UploadGroupRelease -> "Релизные пакеты"
 		UploadGroupPreorder -> "Предзаказ-пакеты"
@@ -85,5 +86,11 @@ localizationRu = Localization
 	, locRecordMacOSBinaryX86Exists = "Есть 32-битная версия для macOS"
 	, locRecordNoMacOSBinaryX86 = "Нет 32-битной версии для macOS"
 	, locMessageAboutMacOSBinaryX86 = "Запуск 64-битных программ невозможен на 32-битных macOS-системах, которые всё ещё используются. Рекомендуется предоставлять 32-битный исполняемый файл вдобавок к 64-битному, или единый универсальный исполняемый файл, поддерживающий обе архитектуры."
+	, locRecordHasDemo = "Есть демо-версия"
+	, locRecordNoDemo = "Нет демо-версии"
+	, locMessageAboutDemo = "Вы можете добавить демо-версию, чтобы игроки могли лучше оценить вашу игру перед покупкой."
+	, locRecordOptedIntoPressSystem = "Входит в программу доступа для прессы itch.io"
+	, locRecordNotOptedIntoPressSystem = "Не входит в программу доступа для прессы itch.io"
+	, locMessageAboutPressSystem = "Вы можете включить игры вашего аккаунта в программу доступа для прессы itch.io, позволяющую проверенным аккаунтам от игровой прессы загружать и играть в ваши игры бесплатно."
 	, locRecordNoUploads = "Нет пакетов"
 	}

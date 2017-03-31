@@ -23,7 +23,7 @@ data Record = Record
 	}
 
 data Scope
-	= GameScope
+	= ProjectScope
 	| UploadGroupScope !UploadGroup
 	| UploadScope {-# UNPACK #-} !ItchUploadId
 	| EntryScope {-# UNPACK #-} !ItchUploadId [T.Text]
