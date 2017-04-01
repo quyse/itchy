@@ -324,9 +324,34 @@ parseFile name path mime = do
 					}
 				_ -> binary
 			_ -> binary
+		-- check if the binary is CLR (.NET) binary
+		isCLR <- do
+			peHeader <- withFile (T.unpack path) ReadMode $ \h -> B.hGet h 0x200
+			return $ either (const False) id $ flip S.runGet peHeader $ do
+				-- according to ECMA-335 spec: http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-335.pdf
+				-- skip to offset to PE header in MS-DOS header
+				S.skip 0x3c
+				peFileHeaderOffset <- S.getWord32le
+				-- skip to PE header
+				S.skip $ fromIntegral peFileHeaderOffset - 0x3c - 4
+				-- check PE signature
+				peSignature <- S.getBytes 4
+				unless (peSignature == "PE\0\0") $ fail "wrong PE signature"
+				-- check machine
+				machine <- S.getWord16le
+				unless (machine == 0x14C) $ fail "wrong machine"
+				-- skip to PE optional header
+				S.skip $ 20 {- size of PE header -} - 2
+				-- skip to CLI header
+				S.skip 208
+				cliHeaderOffset <- S.getWord32le
+				cliHeaderSize <- S.getWord32le
+				return $ cliHeaderOffset > 0 && cliHeaderSize > 0
+
 		addParse $ ReportParse_binaryPe $ foldl foldBinary ReportBinaryPe
 			{ reportBinaryPe_arch = ReportArch_unknown
 			, reportBinaryPe_isLibrary = T.isSuffixOf ".dll" name
+			, reportBinaryPe_isCLR = isCLR
 			, reportBinaryPe_deps = []
 			} $ T.lines objdumpOutput
 

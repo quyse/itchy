@@ -153,6 +153,7 @@ instance A.FromJSON ItchTomlAction where
 data ReportBinaryPe = ReportBinaryPe
 	{ reportBinaryPe_arch :: !ReportArch
 	, reportBinaryPe_isLibrary :: !Bool
+	, reportBinaryPe_isCLR :: !Bool
 	, reportBinaryPe_deps :: [ReportDep]
 	} deriving Generic
 instance S.Serialize ReportBinaryPe
