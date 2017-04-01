@@ -71,8 +71,8 @@ localizationRu = Localization
 	, locRecordAVCheckFailed = "Антивирусная проверка провалена"
 	, locRecordUnpackNotStarted = "Распаковка не выполнена"
 	, locRecordUnpackFailed = "Распаковка завершилась с ошибкой"
-	, locRecordDepVersionTooHigh = \depName -> RichText ["Требуемая версия ", RichChunkCode depName, " слишком высокая"]
-	, locMessageDepVersionTooHigh = \depName (reportDepVersionToText -> depVersion) distroName (reportDepVersionToText -> distroVersion) -> RichText
+	, locRecordDepVersionRequirement = \distroName -> RichText ["Требуется версия ", RichChunkCode distroName, " или выше"]
+	, locMessageDepVersionRequirement = \depName (reportDepVersionToText -> depVersion) distroName (reportDepVersionToText -> distroVersion) -> RichText
 		[ "Требуемая версия ", RichChunkCode depName, " - ", RichChunkCode depVersion
 		, " для которой в свою очередь требуется дистрибутив не ниже ", RichChunkCode distroName
 		, " (содержащий ", RichChunkCode depName, " ", RichChunkCode distroVersion, ")."
@@ -87,9 +87,9 @@ localizationRu = Localization
 	, locRecordNoWindowsBinaryX86 = "Нет 32-битной версии для Windows"
 	, locMessageAboutWindowsBinaryX86 = "64-битные исполняемые файлы не могут быть запущены на 32-битных Windows-системах, которые всё ещё встречаются у игроков. Рекомендуется предоставлять 32-битный исполняемый файл, который спокойно работает и на 32-х, и на 64-битных системах."
 	, locRecordNoLinuxBinaryX64 = "Нет 64-битной версии для Linux"
-	, locMessageNoLinuxBinaryX64 = "Сейчас большинство Linux систем 64-битные. На 64-битном Linux, в отличие от других ОС, 32-битные программы обычно не запускаются \"из коробки\", и может потребоваться поставить дополнительные библиотеки (\"multilib\"). Рекомендуется предоставлять 64-битную версию вдобавок к 32-битной, чтобы не создавать лишних трудностей большинству игроков."
 	, locRecordNoLinuxBinaryX86 = "Нет 32-битной версии для Linux"
-	, locMessageNoLinuxBinaryX86 = "Запуск 64-битных программ невозможен на 32-битных Linux-системах, которые всё ещё встречаются у игроков. Рекомендуется предоставлять 32-битный исполняемый файл вдобавок к 64-битному."
+	, locRecordHasLinuxBinaryX64X86 = "Есть и 64, и 32-битная версии для Linux"
+	, locMessageAboutLinuxBinaryArchs = "Рекомендуется предоставлять как 64-битную, так и 32-битную версию исполняемых файлов на Linux. Сейчас большинство Linux систем 64-битные. На 64-битном Linux, в отличие от других ОС, 32-битные программы обычно не запускаются \"из коробки\", и может потребоваться поставить дополнительные библиотеки (\"multilib\"). Также запуск 64-битных программ невозможен на 32-битных Linux-системах, которые всё ещё встречаются у игроков."
 	, locRecordMacOSBinaryX86Exists = "Есть 32-битная версия для macOS"
 	, locRecordNoMacOSBinaryX86 = "Нет 32-битной версии для macOS"
 	, locMessageAboutMacOSBinaryX86 = "Запуск 64-битных программ невозможен на 32-битных macOS-системах, которые всё ещё используются. Рекомендуется предоставлять 32-битный исполняемый файл вдобавок к 64-битному, или единый универсальный исполняемый файл, поддерживающий обе архитектуры."

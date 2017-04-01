@@ -224,13 +224,13 @@ analyseUpload loc itchUpload@ItchUpload
 				(((distroName, severity), distroGlibcVersion) : _) -> Record
 					{ recordScope = entryScope
 					, recordSeverity = severity
-					, recordName = locRecordDepVersionTooHigh loc "GLIBC"
-					, recordMessage = locMessageDepVersionTooHigh loc "GLIBC" glibcVersion distroName distroGlibcVersion
+					, recordName = locRecordDepVersionRequirement loc distroName
+					, recordMessage = locMessageDepVersionRequirement loc "GLIBC" glibcVersion distroName distroGlibcVersion
 					} : records
 				[] -> Record
 					{ recordScope = entryScope
 					, recordSeverity = SeverityBad
-					, recordName = locRecordDepVersionTooHigh loc "GLIBC"
+					, recordName = locRecordDepVersionRequirement loc mempty
 					, recordMessage = mempty
 					} : records
 			in case entry of
@@ -266,19 +266,28 @@ analyseUploadGroup loc (UploadGroupScope -> scope) uploads = AnalysisUploadGroup
 					, recordMessage = locMessageAboutWindowsBinaryX86 loc
 					}]
 			else []
-		, if HS.member PlatformLinux groupPlatformsOnly then concat
-				[ if HS.member (PlatformLinux, ReportArch_x64) groupPlatforms then [] else [Record
+		, if HS.member PlatformLinux groupPlatformsOnly then let
+				hasX64 = HS.member (PlatformLinux, ReportArch_x64) groupPlatforms
+				hasX86 = HS.member (PlatformLinux, ReportArch_x86) groupPlatforms
+				in concat
+				[ if hasX64 then [] else [Record
 					{ recordScope = scope
 					, recordSeverity = SeverityWarn
 					, recordName = locRecordNoLinuxBinaryX64 loc
-					, recordMessage = locMessageNoLinuxBinaryX64 loc
+					, recordMessage = locMessageAboutLinuxBinaryArchs loc
 					}]
-				, if HS.member (PlatformLinux, ReportArch_x86) groupPlatforms then [] else [Record
+				, if hasX86 then [] else [Record
 					{ recordScope = scope
 					, recordSeverity = SeverityWarn
 					, recordName = locRecordNoLinuxBinaryX86 loc
-					, recordMessage = locMessageNoLinuxBinaryX86 loc
+					, recordMessage = locMessageAboutLinuxBinaryArchs loc
 					}]
+				, if hasX64 && hasX86 then [Record
+					{ recordScope = scope
+					, recordSeverity = SeverityOk
+					, recordName = locRecordHasLinuxBinaryX64X86 loc
+					, recordMessage = locMessageAboutLinuxBinaryArchs loc
+					}] else []
 				]
 			else []
 		, if HS.member PlatformMacOS groupPlatformsOnly then

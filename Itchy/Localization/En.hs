@@ -71,25 +71,25 @@ localizationEn = Localization
 	, locRecordAVCheckFailed = "AV check failed"
 	, locRecordUnpackNotStarted = "Unpacking package skipped"
 	, locRecordUnpackFailed = "Unpacking package failed"
-	, locRecordDepVersionTooHigh = \depName -> RichText ["Required version of ", RichChunkCode depName, " is too high"]
-	, locMessageDepVersionTooHigh = \depName (reportDepVersionToText -> depVersion) distroName (reportDepVersionToText -> distroVersion) -> RichText
-		[ "Required version for ", RichChunkCode depName, " is ", RichChunkCode depVersion
+	, locRecordDepVersionRequirement = \distroName -> RichText ["Minimum required distro is ", RichChunkCode distroName]
+	, locMessageDepVersionRequirement = \depName (reportDepVersionToText -> depVersion) distroName (reportDepVersionToText -> depInDistroVersion) -> RichText
+		[ "Required version of ", RichChunkCode depName, " is ", RichChunkCode depVersion
 		, " which in turn requires at least ", RichChunkCode distroName
-		, " (containing ", RichChunkCode depName, " ", RichChunkCode distroVersion, ")."
+		, " (containing ", RichChunkCode depName, " ", RichChunkCode depInDistroVersion, ")."
 		]
 	, locRecordNoBinaries = "No binaries found"
 	, locMessageNoBinaries = "No binaries found in this upload. It's totally OK if it's a non-executable package like book, soundtrack or asset pack."
 	, locRecordBinariesCoverPlatforms = "Binaries exist for all declared platforms"
-	, locMessageBinariesCoverPlatforms = "Binaries have been found for every platform the upload is tagged with."
+	, locMessageBinariesCoverPlatforms = "Binaries are found for every platform the upload is tagged with."
 	, locRecordBinariesPlatformsMismatch = "Binaries platforms mismatch"
 	, locMessageBinariesPlatformsMismatch = "Binaries platforms mismatch"
 	, locRecordWindowsBinaryX86Exists = "There's 32-bit Windows binary"
 	, locRecordNoWindowsBinaryX86 = "No 32-bit Windows binary"
 	, locMessageAboutWindowsBinaryX86 = "Your Windows build can be played on 64-bit system only. 32-bit systems are still exist among players, so it would be nice to provide 32-bit build (in which case 64-bit is not really necessary, as 32-bit binaries are perfectly playable on 64-bit Windows)."
 	, locRecordNoLinuxBinaryX64 = "No 64-bit Linux binary"
-	, locMessageNoLinuxBinaryX64 = "Most of the Linux system are 64-bit nowadays. Contrary to other OSes, 32-bit programs usually cannot be launched on 64-bit Linux out-of-the-box, installation of additional (\"multilib\") libraries may be required. The strong recommendation is to provide 64-bit version among with 32-bit, to not create troubles to the actual majority of users."
 	, locRecordNoLinuxBinaryX86 = "No 32-bit Linux binary"
-	, locMessageNoLinuxBinaryX86 = "It's impossible to run 64-bit program on 32-bit Linux system, which's still used by some players. It's advised to provide 32-bit version for them in addition to 64-bit."
+	, locRecordHasLinuxBinaryX64X86 = "Both 64-bit and 32-bit Linux binaries present"
+	, locMessageAboutLinuxBinaryArchs = "It's recommended to provide both 64-bit and 32-bit Linux binaries. Most of the Linux system are 64-bit nowadays. Contrary to other OSes, 32-bit programs usually cannot be launched on 64-bit Linux out-of-the-box, installation of additional (\"multilib\") libraries may be required. It's also impossible to run 64-bit program on 32-bit Linux system, which's still used by some players."
 	, locRecordMacOSBinaryX86Exists = "There's 32-bit macOS binary"
 	, locRecordNoMacOSBinaryX86 = "No 32-bit macOS binary"
 	, locMessageAboutMacOSBinaryX86 = "It's impossible to run 64-bit program on 32-bit macOS system, which's still in use. The recommendation is to provide 32-bit version in addition to 64-bit, or a single universal binary supporting both architectures."

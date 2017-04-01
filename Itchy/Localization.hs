@@ -58,8 +58,8 @@ data Localization = Localization
 	, locRecordAVCheckFailed :: !RichText
 	, locRecordUnpackNotStarted :: !RichText
 	, locRecordUnpackFailed :: !RichText
-	, locRecordDepVersionTooHigh :: !(T.Text -> RichText)
-	, locMessageDepVersionTooHigh :: !(T.Text -> ReportDepVersion -> T.Text -> ReportDepVersion -> RichText)
+	, locRecordDepVersionRequirement :: !(T.Text -> RichText)
+	, locMessageDepVersionRequirement :: !(T.Text -> ReportDepVersion -> T.Text -> ReportDepVersion -> RichText)
 	, locRecordNoBinaries :: !RichText
 	, locMessageNoBinaries :: !RichText
 	, locRecordBinariesCoverPlatforms :: !RichText
@@ -70,9 +70,9 @@ data Localization = Localization
 	, locRecordNoWindowsBinaryX86 :: !RichText
 	, locMessageAboutWindowsBinaryX86 :: !RichText
 	, locRecordNoLinuxBinaryX64 :: !RichText
-	, locMessageNoLinuxBinaryX64 :: !RichText
 	, locRecordNoLinuxBinaryX86 :: !RichText
-	, locMessageNoLinuxBinaryX86 :: !RichText
+	, locRecordHasLinuxBinaryX64X86 :: !RichText
+	, locMessageAboutLinuxBinaryArchs :: !RichText
 	, locRecordMacOSBinaryX86Exists :: !RichText
 	, locRecordNoMacOSBinaryX86 :: !RichText
 	, locMessageAboutMacOSBinaryX86 :: !RichText
