@@ -35,6 +35,7 @@ executable itchyd
     , bytestring
     , cereal
     , cereal-text
+    , cereal-vector
     , containers
     , cookie
     , cryptonite
@@ -54,6 +55,7 @@ executable itchyd
     , text
     , unix
     , unordered-containers
+    , vector
     , wai-app-static
     , wai-extra
     , wai-routes
@@ -85,6 +87,7 @@ executable itchy-runner
     , process
     , unix
     , unordered-containers
+    , vector
     , text
     , yaml
   default-language:    Haskell2010

@@ -22,10 +22,10 @@ import Itchy.Report.Record
 localizationRu :: Localization
 localizationRu = Localization
 	{ locLanguageName = "Русский"
-	, locDashboard = "Кабинет"
-	, locGames = "Игры"
-	, locReports = "Отчёты"
+	, locHome = "Главная"
+	, locSearch = "Поиск"
 	, locGameByAuthor = \game author -> game <> " от " <> author
+	, locDescription = \desc -> "Описание: " <> desc
 	, locPlatforms = "Платформы"
 	, locHasDemo = "Есть демо"
 	, locNoDemo = "Нет демо"
@@ -44,7 +44,13 @@ localizationRu = Localization
 		else if size < 2 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / 1024 :: Float) "") <> " Кб"
 		else if size < 2 * 1024 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024) :: Float) "") <> " Мб"
 		else T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024 * 1024) :: Float) "") <> " Гб"
+	, locNoUserVersion = "не указана"
+	, locBuildVersion = \buildVersion buildUserVersion -> "версия: " <> RichText [RichChunkCode buildVersion] <> ", пользовательская версия: " <> RichText [RichChunkCode buildUserVersion]
+	, locDoesntUseButler = "не использует butler"
+	, locReportReady = "готов"
+	, locReportNotReady = "ещё не готов"
 	, locReport = "Отчёт"
+	, locReportNotComplete = \a b -> "Отчёт неполон! Обработано " <> RichText [RichChunkCode $ T.pack $ show a] <> " из " <> RichText [RichChunkCode $ T.pack $ show b] <> " пакетов."
 	, locRecordSeverity = "Статус"
 	, locRecordScope = "Субъект"
 	, locRecordName = "Тест"
@@ -55,6 +61,8 @@ localizationRu = Localization
 		UploadGroupDemo -> "Демо пакеты"
 	, locScopeUpload = \maybeUpload -> RichText [RichChunkCode $ fromMaybe "<?>" maybeUpload]
 	, locScopeEntry = \maybeUpload entry -> RichText [RichChunkCode (fromMaybe "<?>" maybeUpload), RichChunkText ": ", RichChunkCode entry]
+	, locUnknownGame = "Неизвестная игра"
+	, locGameNotCached = "Запрашиваем информацию по этой игре... Попробуйте обновить страницу через несколько секунд."
 	, locSeverityOk = "НОРМ"
 	, locSeverityInfo = "ИНФО"
 	, locSeverityTip = "СОВЕТ"
@@ -78,7 +86,7 @@ localizationRu = Localization
 		, " (содержащий ", RichChunkCode depName, " ", RichChunkCode distroVersion, ")."
 		]
 	, locRecordNoBinaries = "Бинарники не найдены"
-	, locMessageNoBinaries = "В данном пакете не найдено ни одного исполняемого файла. Это нормально для неисполняемого пакета, такого как книга, саундтрек, пак ассетов."
+	, locMessageNoBinaries = "В данном пакете не найдено ни одного исполняемого файла. Это нормально для неисполняемого пакета, такого как книга, саундтрек, пак ассетов. В противном случае это, вероятно, ошибка."
 	, locRecordBinariesCoverPlatforms = "Есть бинарники для всех указанных платформ"
 	, locMessageBinariesCoverPlatforms = "Исполняемые файлы были найдены для каждой платформы, указанной в тегах пакета."
 	, locRecordBinariesPlatformsMismatch = "Бинарники и теги не совпадают"

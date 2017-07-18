@@ -13,6 +13,10 @@ td
 	border-collapse collapse
 	vertical-align top
 	padding 1px 5px
+th
+	vertical-align top
+	padding 1px 5px
+	text-align left
 tr
 	&:first-child
 		background #f0f0f0
@@ -44,7 +48,10 @@ code
 
 .game_info
 	& > .cover
-		float right
+		float left
+		max-width 315px
+		max-height 250px
+		margin-right 20px
 	& > .upload
 		& > .name
 			font-weight bold
@@ -153,3 +160,25 @@ a
 	text-align center
 	vertical-align middle
 	font-weight bold
+
+.searchresults
+	& > a
+		display inline-block
+		position relative
+		width 315px
+		height 250px
+		& > img
+			position absolute
+			left 0
+			top 0
+			max-width 315px
+			max-height 250px
+		& > span
+			position absolute
+			left 0
+			right 0
+			bottom 0
+			color #fff
+			background #000
+			font-size 1.5em
+			text-align center

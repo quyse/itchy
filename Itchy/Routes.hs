@@ -3,7 +3,7 @@ Module: Itchy.Routes
 Description: Web app routes
 -}
 
-{-# LANGUAGE MultiParamTypeClasses, OverloadedStrings, QuasiQuotes, RankNTypes, TemplateHaskell, TypeFamilies, ViewPatterns #-}
+{-# LANGUAGE BangPatterns, MultiParamTypeClasses, OverloadedLists, OverloadedStrings, QuasiQuotes, RankNTypes, TemplateHaskell, TypeFamilies, ViewPatterns #-}
 
 module Itchy.Routes
 	( App(..)
@@ -20,6 +20,7 @@ import qualified Data.Serialize as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
+import qualified Data.Vector as V
 import Data.Word
 import qualified Data.Yaml as Y
 import qualified Network.HTTP.Types as HT
@@ -68,33 +69,22 @@ getLocalization = do
 	return $ fromMaybe localizationEn $ lookup locale localizations
 
 W.mkRoute "App" [W.parseRoutes|
-/ DashboardR GET
-/reports ReportsR GET
-/games GamesR GET
+/ HomeR GET
 /game/#Word64 GameR GET
 /upload/#Word64 UploadR GET
 /investigateUpload/#Word64 InvestigateUploadR POST
 /auth AuthR POST
+/search SearchR GET
 |]
 
-getDashboardR :: W.Handler App
-getDashboardR = W.runHandlerM $ do
+getHomeR :: W.Handler App
+getHomeR = W.runHandlerM $ do
 	showRoute <- W.showRouteSub
 	loc <- getLocalization
-	page (locDashboard loc) [(locDashboard loc, DashboardR)] $ do
-		a ! A.href (toValue $ showRoute ReportsR) $ toHtml $ locReports loc
-
-getReportsR :: W.Handler App
-getReportsR = W.runHandlerM $ do
-	loc <- getLocalization
-	page (locReports loc) [(locDashboard loc, DashboardR), (locReports loc, ReportsR)] $ do
-		mempty
-
-getGamesR :: W.Handler App
-getGamesR = W.runHandlerM $ do
-	loc <- getLocalization
-	page (locGames loc) [(locDashboard loc, DashboardR), (locGames loc, GamesR)] $ do
-		mempty
+	page (locHome loc) [(locHome loc, HomeR)] $
+		H.form ! A.method "GET" ! A.action (H.toValue $ showRoute SearchR) $ do
+			H.input ! A.type_ "text" ! A.name "s"
+			H.input ! A.type_ "submit" ! A.value (H.toValue $ locSearch loc)
 
 getGameR :: Word64 -> W.Handler App
 getGameR gameId = W.runHandlerM $ do
@@ -124,7 +114,7 @@ getGameR gameId = W.runHandlerM $ do
 			, itchGame_p_android = gameAndroid
 			}, gameUploads) -> do
 			let gameByAuthor = locGameByAuthor loc gameTitle creatorUserName
-			let uploadsById = HM.fromList $ flip Prelude.map gameUploads $ \(upload@ItchUpload
+			let uploadsById = HM.fromList $ V.toList $ flip fmap gameUploads $ \(upload@ItchUpload
 				{ itchUpload_id = uploadId
 				}, _maybeBuild) -> (uploadId, upload)
 			let uploadName uploadId = case HM.lookup uploadId uploadsById of
@@ -136,11 +126,11 @@ getGameR gameId = W.runHandlerM $ do
 			maybeReports <- liftIO $ forM gameUploads $ \(ItchUpload
 				{ itchUpload_id = uploadId
 				}, _maybeBuild) -> itchCacheGetReport itchCache uploadId
-			page gameByAuthor [(locDashboard loc, DashboardR), (locGames loc, GamesR), (gameByAuthor, GameR gameId)] $ H.div ! A.class_ "game_info" $ do
+			page gameByAuthor [(locHome loc, HomeR), (gameByAuthor, GameR gameId)] $ H.div ! A.class_ "game_info" $ do
 				case maybeGameCoverUrl of
 					Just coverUrl -> img ! A.class_ "cover" ! A.src (toValue coverUrl)
 					Nothing -> mempty
-				p $ toHtml gameShortText
+				p $ toHtml $ locDescription loc gameShortText
 				p $ toHtml (locPlatforms loc) <> ": "
 					<> (if gameWindows then H.span ! A.class_ "tag" $ "windows" else mempty)
 					<> (if gameLinux then H.span ! A.class_ "tag" $ "linux" else mempty)
@@ -161,7 +151,8 @@ getGameR gameId = W.runHandlerM $ do
 						th $ toHtml $ locSize loc
 						th $ toHtml $ locTags loc
 						th "Butler"
-					forM_ gameUploads $ \(ItchUpload
+						th $ toHtml $ locReport loc
+					forM_ (V.zip gameUploads maybeReports) $ \((ItchUpload
 						{ itchUpload_id = ItchUploadId uploadId
 						, itchUpload_display_name = fromMaybe "" -> uploadDisplayName
 						, itchUpload_filename = uploadFileName
@@ -172,7 +163,7 @@ getGameR gameId = W.runHandlerM $ do
 						, itchUpload_p_linux = uploadLinux
 						, itchUpload_p_osx = uploadMacOS
 						, itchUpload_p_android = uploadAndroid
-						}, maybeBuild) -> H.tr ! A.class_ "upload" $ do
+						}, maybeBuild), maybeReport) -> H.tr ! A.class_ "upload" $ do
 						H.td ! A.class_ "name" $ toHtml uploadDisplayName
 						H.td ! A.class_ "filename" $ a ! A.href (toValue $ showRoute $ UploadR uploadId) $ toHtml uploadFileName
 						H.td $ toHtml $ locSizeInBytes loc uploadSize
@@ -185,11 +176,20 @@ getGameR gameId = W.runHandlerM $ do
 							if uploadPreorder then H.span ! A.class_ "tag" $ "preorder" else mempty
 						H.td $ case maybeBuild of
 							Just ItchBuild
-								{ itchBuild_version = buildVersion
-								, itchBuild_user_version = fromMaybe "<no user version>" -> buildUserVersion
-								} -> "version: " <> (H.span ! A.class_ "version" $ toHtml $ show buildVersion) <> ", user version: " <> (H.span ! A.class_ "version" $ toHtml buildUserVersion)
-							Nothing -> "doesn't use butler"
+								{ itchBuild_version = T.pack . show -> buildVersion
+								, itchBuild_user_version = fromMaybe (locNoUserVersion loc) -> buildUserVersion
+								} -> H.toHtml $ locBuildVersion loc buildVersion buildUserVersion
+							Nothing -> H.toHtml $ locDoesntUseButler loc
+						H.td $ H.toHtml $ case maybeReport of
+							Just _ -> locReportReady loc
+							Nothing -> locReportNotReady loc
 				h2 $ toHtml $ locReport loc
+				let
+					reportsCount = foldr (\maybeReport !c -> case maybeReport of
+						Just _ -> c + 1
+						Nothing -> c
+						) 0 maybeReports
+					in when (reportsCount < V.length gameUploads) $ H.p $ H.toHtml $ locReportNotComplete loc reportsCount (V.length gameUploads)
 				let AnalysisGame
 					{ analysisGame_uploads = analysisUploads
 					, analysisGame_release = AnalysisUploadGroup
@@ -203,7 +203,7 @@ getGameR gameId = W.runHandlerM $ do
 						}
 					, analysisGame_records = gameRecords
 					} = analyseGame loc game $ concat $
-					flip Prelude.map (zip gameUploads maybeReports) $
+					flip fmap (V.toList $ V.zip gameUploads maybeReports) $
 					\((u, _), mr) -> case mr of
 					Just r -> [(u, r)]
 					Nothing -> []
@@ -227,6 +227,7 @@ getGameR gameId = W.runHandlerM $ do
 						H.th $ toHtml $ locRecordSeverity loc
 						H.th ! A.class_ "scope" $ toHtml $ locRecordScope loc
 						H.th ! A.class_ "name" $ toHtml $ locRecordName loc
+						H.th ! A.class_ "name" $ mempty
 					forM_ records $ \Record
 						{ recordScope = scope
 						, recordSeverity = severity
@@ -247,12 +248,11 @@ getGameR gameId = W.runHandlerM $ do
 								UploadGroupScope uploadGroup -> locScopeUploadGroup loc uploadGroup
 								UploadScope uploadId -> locScopeUpload loc (uploadName uploadId)
 								EntryScope uploadId entryPath -> locScopeEntry loc (uploadName uploadId) (T.intercalate "/" entryPath)
-							H.td $ H.div ! A.class_ "record" $ do
-								toHtml name
-								unless (message == RichText []) $
-									H.div ! A.class_ "message" $ toHtml message
+							H.td $ H.div ! A.class_ "record" $ toHtml name
+							H.td $ unless (message == RichText []) $
+								H.div ! A.class_ "message" $ toHtml message
 
-				forM_ (zip gameUploads maybeReports) $ \((ItchUpload
+				forM_ (V.zip gameUploads maybeReports) $ \((ItchUpload
 					{ itchUpload_id = ItchUploadId uploadId
 					}, _maybeBuild), maybeReport) -> do
 					case maybeReport of
@@ -261,8 +261,8 @@ getGameR gameId = W.runHandlerM $ do
 					H.form ! A.action (toValue $ showRoute $ InvestigateUploadR uploadId) ! A.method "POST" $
 						H.input ! A.type_ "submit" ! A.value (toValue $ "Process upload " <> show uploadId)
 		Nothing -> do
-			let gameByAuthor = "unknown"
-			page gameByAuthor [("Dashboard", DashboardR), ("Games", GamesR), (gameByAuthor, GameR gameId)] $ H.p "Information about this game is not cached yet."
+			let gameByAuthor = locUnknownGame loc
+			page gameByAuthor [(locHome loc, HomeR), (gameByAuthor, GameR gameId)] $ H.p $ H.toHtml $ locGameNotCached loc
 
 getUploadR :: Word64 -> W.Handler App
 getUploadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
@@ -306,9 +306,32 @@ postAuthR = W.runHandlerM $ do
 				, W.setCookiePath = Just "/"
 				}
 			showRoute <- W.showRouteSub
-			W.header "Location" (T.encodeUtf8 $ showRoute DashboardR)
+			W.header "Location" (T.encodeUtf8 $ showRoute HomeR)
 			W.status HT.seeOther303
 		Nothing -> W.status HT.notFound404
+
+getSearchR :: W.Handler App
+getSearchR = W.runHandlerM $ do
+	App
+		{ appItchApi = itchApi
+		} <- W.sub
+	showRoute <- W.showRouteSub
+	loc <- getLocalization
+	searchText <- fromMaybe "" <$> W.getParam "s"
+	games <- liftIO $ itchSearchGame itchApi searchText
+	page (locSearch loc) [(locHome loc, HomeR), (locSearch loc, SearchR)] $ do
+		H.form ! A.method "GET" ! A.action (H.toValue $ showRoute SearchR) $ do
+			H.input ! A.type_ "text" ! A.name "s"
+			H.input ! A.type_ "submit" ! A.value (H.toValue $ locSearch loc)
+		H.div ! A.class_ "searchresults" $ forM_ games $ \ItchGameShort
+			{ itchGameShort_id = ItchGameId gameId
+			, itchGameShort_title = gameTitle
+			, itchGameShort_cover_url = maybeGameCoverUrl
+			} -> H.a ! A.class_ "game" ! A.href (H.toValue $ showRoute $ GameR gameId) $ do
+			case maybeGameCoverUrl of
+				Just gameCoverUrl -> H.img ! A.src (H.toValue gameCoverUrl)
+				Nothing -> mempty
+			H.span $ H.toHtml gameTitle
 
 page :: W.RenderRoute master => T.Text -> [(T.Text, W.Route App)] -> Html -> W.HandlerM App master ()
 page titleText pieces bodyHtml = do

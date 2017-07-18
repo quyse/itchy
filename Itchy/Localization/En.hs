@@ -22,10 +22,10 @@ import Itchy.Report.Record
 localizationEn :: Localization
 localizationEn = Localization
 	{ locLanguageName = "English"
-	, locDashboard = "Dashboard"
-	, locGames = "Games"
-	, locReports = "Reports"
+	, locHome = "Home"
+	, locSearch = "Search"
 	, locGameByAuthor = \game author -> game <> " by " <> author
+	, locDescription = \desc -> "Description: " <> desc
 	, locPlatforms = "Platforms"
 	, locHasDemo = "Has demo"
 	, locNoDemo = "No demo"
@@ -44,7 +44,13 @@ localizationEn = Localization
 		else if size < 2 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / 1024 :: Float) "") <> " Kb"
 		else if size < 2 * 1024 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024) :: Float) "") <> " Mb"
 		else T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024 * 1024) :: Float) "") <> " Gb"
+	, locNoUserVersion = "not specified"
+	, locBuildVersion = \buildVersion buildUserVersion -> "version: " <> RichText [RichChunkCode buildVersion] <> ", user version: " <> RichText [RichChunkCode buildUserVersion]
+	, locDoesntUseButler = "doesn't use butler"
+	, locReportReady = "ready"
+	, locReportNotReady = "not ready yet"
 	, locReport = "Report"
+	, locReportNotComplete = \a b -> "Report is not complete! Processed " <> RichText [RichChunkCode $ T.pack $ show a] <> " of " <> RichText [RichChunkCode $ T.pack $ show b] <> " uploads."
 	, locRecordSeverity = "Status"
 	, locRecordScope = "Scope"
 	, locRecordName = "Test"
@@ -55,6 +61,8 @@ localizationEn = Localization
 		UploadGroupDemo -> "Demo Uploads"
 	, locScopeUpload = \maybeUpload -> RichText [RichChunkCode $ fromMaybe "<?>" maybeUpload]
 	, locScopeEntry = \maybeUpload entry -> RichText [RichChunkCode (fromMaybe "<?>" maybeUpload), ": ", RichChunkCode entry]
+	, locUnknownGame = "Unknown Game"
+	, locGameNotCached = "Requesting information on this game... Try to refresh the page in a few seconds."
 	, locSeverityOk = "OK"
 	, locSeverityInfo = "INFO"
 	, locSeverityTip = "TIP"
@@ -78,14 +86,14 @@ localizationEn = Localization
 		, " (containing ", RichChunkCode depName, " ", RichChunkCode depInDistroVersion, ")."
 		]
 	, locRecordNoBinaries = "No binaries found"
-	, locMessageNoBinaries = "No binaries found in this upload. It's totally OK if it's a non-executable package like book, soundtrack or asset pack."
+	, locMessageNoBinaries = "No binaries found in this upload. It's totally OK if it's a non-executable package like book, soundtrack or asset pack. Overwise, it's probably some mistake."
 	, locRecordBinariesCoverPlatforms = "Binaries exist for all declared platforms"
 	, locMessageBinariesCoverPlatforms = "Binaries are found for every platform the upload is tagged with."
 	, locRecordBinariesPlatformsMismatch = "Binaries platforms mismatch"
 	, locMessageBinariesPlatformsMismatch = "Binaries platforms mismatch"
 	, locRecordWindowsBinaryX86Exists = "There's 32-bit Windows binary"
 	, locRecordNoWindowsBinaryX86 = "No 32-bit Windows binary"
-	, locMessageAboutWindowsBinaryX86 = "Your Windows build can be played on 64-bit system only. 32-bit systems are still exist among players, so it would be nice to provide 32-bit build (in which case 64-bit is not really necessary, as 32-bit binaries are perfectly playable on 64-bit Windows)."
+	, locMessageAboutWindowsBinaryX86 = "32-bit systems are still exist among players, so it's nice to provide 32-bit build (in which case 64-bit is not really necessary, as 32-bit binaries are perfectly playable on 64-bit Windows)."
 	, locRecordNoLinuxBinaryX64 = "No 64-bit Linux binary"
 	, locRecordNoLinuxBinaryX86 = "No 32-bit Linux binary"
 	, locRecordHasLinuxBinaryX64X86 = "Both 64-bit and 32-bit Linux binaries present"

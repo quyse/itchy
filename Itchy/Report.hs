@@ -34,6 +34,7 @@ import qualified Data.Text as T
 import Data.Word
 import GHC.Generics(Generic)
 
+-- | Report contains information on a single upload.
 data Report = Report
 	{ report_error :: !(Maybe T.Text)
 	, report_download :: !ReportDownload
@@ -46,6 +47,7 @@ instance A.ToJSON Report where
 instance A.FromJSON Report where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Information about download errors.
 data ReportDownload
 	= ReportDownload_notStarted
 	| ReportDownload_skipped
@@ -58,6 +60,7 @@ instance A.ToJSON ReportDownload where
 instance A.FromJSON ReportDownload where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Information about anti-virus check.
 data ReportAVCheck
 	= ReportAVCheck_notStarted
 	| ReportAVCheck_skipped
@@ -70,6 +73,7 @@ instance A.ToJSON ReportAVCheck where
 instance A.FromJSON ReportAVCheck where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Information about unpacking errors.
 data ReportUnpack
 	= ReportUnpack_notStarted
 	| ReportUnpack_succeeded !(M.Map T.Text ReportEntry)
@@ -81,6 +85,7 @@ instance A.ToJSON ReportUnpack where
 instance A.FromJSON ReportUnpack where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Information about a single file/directory.
 data ReportEntry
 	= ReportEntry_unknown
 		{ reportEntry_mode :: {-# UNPACK #-} !Word32
@@ -106,6 +111,7 @@ instance A.ToJSON ReportEntry where
 instance A.FromJSON ReportEntry where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Parsed information about file.
 data ReportParse
 	= ReportParse_itchToml !(Either T.Text ItchToml)
 	| ReportParse_binaryPe !ReportBinaryPe
@@ -118,6 +124,7 @@ instance A.ToJSON ReportParse where
 instance A.FromJSON ReportParse where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Parsed information about @.itch.toml@ file.
 data ItchToml = ItchToml
 	{ itchToml_prereqs :: !(Maybe [ItchTomlPrereq])
 	, itchToml_actions :: [ItchTomlAction]
@@ -128,6 +135,7 @@ instance A.ToJSON ItchToml where
 instance A.FromJSON ItchToml where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Prerequisite in @.itch.toml@.
 data ItchTomlPrereq = ItchTomlPrereq
 	{ itchTomlPrereq_name :: !T.Text
 	} deriving Generic
@@ -137,6 +145,7 @@ instance A.ToJSON ItchTomlPrereq where
 instance A.FromJSON ItchTomlPrereq where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Action in @.itch.toml@.
 data ItchTomlAction = ItchTomlAction
 	{ itchTomlAction_name :: !T.Text
 	, itchTomlAction_path :: !T.Text
@@ -150,6 +159,7 @@ instance A.ToJSON ItchTomlAction where
 instance A.FromJSON ItchTomlAction where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Windows PE executable/library.
 data ReportBinaryPe = ReportBinaryPe
 	{ reportBinaryPe_arch :: !ReportArch
 	, reportBinaryPe_isLibrary :: !Bool
@@ -162,6 +172,7 @@ instance A.ToJSON ReportBinaryPe where
 instance A.FromJSON ReportBinaryPe where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Linux ELF binary.
 data ReportBinaryElf = ReportBinaryElf
 	{ reportBinaryElf_arch :: !ReportArch
 	, reportBinaryElf_isLibrary :: !Bool
@@ -173,6 +184,7 @@ instance A.ToJSON ReportBinaryElf where
 instance A.FromJSON ReportBinaryElf where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | macOS Mach-O binary.
 data ReportBinaryMachO = ReportBinaryMachO
 	{ reportBinaryMachO_binaries :: [ReportMachOSubBinary]
 	, reportBinaryMachO_isLibrary :: !Bool
@@ -183,6 +195,7 @@ instance A.ToJSON ReportBinaryMachO where
 instance A.FromJSON ReportBinaryMachO where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | macOS Mach-O sub-binary.
 data ReportMachOSubBinary = ReportMachOSubBinary
 	{ reportMachoSubBinary_arch :: !ReportArch
 	, reportMachoSubBinary_deps :: [ReportDep]
@@ -193,6 +206,7 @@ instance A.ToJSON ReportMachOSubBinary where
 instance A.FromJSON ReportMachOSubBinary where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Binary architecture.
 data ReportArch
 	= ReportArch_unknown
 	| ReportArch_x86
@@ -205,6 +219,7 @@ instance A.ToJSON ReportArch where
 instance A.FromJSON ReportArch where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Binary dependency.
 data ReportDep = ReportDep
 	{ reportDep_name :: !T.Text
 	, reportDep_version :: !ReportDepVersion
@@ -215,9 +230,11 @@ instance A.ToJSON ReportDep where
 instance A.FromJSON ReportDep where
 	parseJSON = A.genericParseJSON jsonOptions
 
+-- | Parsed version of binary dependency.
 newtype ReportDepVersion = ReportDepVersion [Integer]
 	deriving (Generic, Eq, Ord, S.Serialize, A.ToJSON, A.FromJSON)
 
+-- | Convert version of binary dependency to text.
 reportDepVersionToText :: ReportDepVersion -> T.Text
 reportDepVersionToText (ReportDepVersion numbers) = T.intercalate "." $ map (T.pack . show) numbers
 

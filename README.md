@@ -6,12 +6,12 @@
 * Linux: .desktop file exists
 * macOS: app is present, it's signed and correct
 * macOS: executable is fat file
-* Antivirus check with ClamAV and possibly VirusTotal public API
+* DONE Antivirus check with ClamAV
 * Signature check on Windows
 * Warn against Unity-plugin games
 * Executable permissions on Linux and macOS - for binaries, scripts and .desktop
 * Filenames with Unicode symbols
-* Suggest setting display name for uploads with missing display name
+* DONE Suggest setting display name for uploads with missing display name
 * Suggest using butler for uploads (i.e. detect wharf-non-enabled uploads)
 * Suggest using user-version when using butler
 

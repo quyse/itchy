@@ -16,10 +16,10 @@ import Itchy.Report.Record
 
 data Localization = Localization
 	{ locLanguageName :: !T.Text
-	, locDashboard :: !T.Text
-	, locGames :: !T.Text
-	, locReports :: !T.Text
+	, locHome :: !T.Text
+	, locSearch :: !T.Text
 	, locGameByAuthor :: !(T.Text -> T.Text -> T.Text)
+	, locDescription :: !(T.Text -> T.Text)
 	, locPlatforms :: !T.Text
 	, locHasDemo :: !T.Text
 	, locNoDemo :: !T.Text
@@ -34,7 +34,13 @@ data Localization = Localization
 	, locSize :: !T.Text
 	, locTags :: !T.Text
 	, locSizeInBytes :: !(Integer -> T.Text)
+	, locNoUserVersion :: !T.Text
+	, locBuildVersion :: !(T.Text -> T.Text -> RichText)
+	, locDoesntUseButler :: !T.Text
+	, locReportReady :: !T.Text
+	, locReportNotReady :: !T.Text
 	, locReport :: !T.Text
+	, locReportNotComplete :: !(Int -> Int -> RichText)
 	, locRecordSeverity :: !T.Text
 	, locRecordScope :: !T.Text
 	, locRecordName :: !T.Text
@@ -42,6 +48,8 @@ data Localization = Localization
 	, locScopeUploadGroup :: !(UploadGroup -> RichText)
 	, locScopeUpload :: !(Maybe T.Text -> RichText)
 	, locScopeEntry :: !(Maybe T.Text -> T.Text -> RichText)
+	, locUnknownGame :: !T.Text
+	, locGameNotCached :: !T.Text
 	, locSeverityOk :: !T.Text
 	, locSeverityInfo :: !T.Text
 	, locSeverityTip :: !T.Text

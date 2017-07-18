@@ -3,7 +3,7 @@ Module: Itchy.ItchCache
 Description: Cache for itch data
 -}
 
-{-# LANGUAGE DeriveGeneric, LambdaCase #-}
+{-# LANGUAGE DeriveGeneric, LambdaCase, ViewPatterns #-}
 
 module Itchy.ItchCache
 	( ItchCache()
@@ -22,6 +22,8 @@ import Data.Int
 import qualified Data.Set as S
 import qualified Data.Serialize as S
 import qualified Data.Text as T
+import qualified Data.Vector as V
+import Data.Vector.Serialize()
 import Foreign.C.Types
 import GHC.Generics(Generic)
 import System.Posix.Time
@@ -71,7 +73,7 @@ instance S.Serialize CacheKey where
 			_ -> fail "wrong key type"
 
 data CachedGame = CachedGame
-	{ game_maybeItchGameWithUploads :: !(Maybe (ItchGame, [ItchUploadId]))
+	{ game_maybeItchGameWithUploads :: !(Maybe (ItchGame, V.Vector ItchUploadId))
 	, game_updated :: {-# UNPACK #-} !Int64
 	} deriving Generic
 instance S.Serialize CachedGame
@@ -128,7 +130,7 @@ itchCacheOperation ItchCache
 	catch io $ \(SomeException e) -> print e
 	threadDelay apiCooldown
 
-itchCacheGetGame :: ItchCache -> ItchGameId -> IO (Maybe (ItchGame, [(ItchUpload, Maybe ItchBuild)]))
+itchCacheGetGame :: ItchCache -> ItchGameId -> IO (Maybe (ItchGame, V.Vector (ItchUpload, Maybe ItchBuild)))
 itchCacheGetGame cache gameId = do
 	-- try to get game from database
 	maybeGame <- itchCacheGet CacheKeyGame cache gameId
@@ -147,7 +149,7 @@ itchCacheGetGame cache gameId = do
 		Just CachedGame
 			{ game_maybeItchGameWithUploads = Just (itchGame, uploadIds)
 			} -> do
-			itchUploads <- (concat <$>) . forM uploadIds $ \uploadId -> do
+			itchUploads <- (V.fromList . concat <$>) . forM uploadIds $ \uploadId -> do
 				-- try to get uploads from database
 				maybeUpload <- itchCacheGet CacheKeyUpload cache uploadId
 				case maybeUpload of
@@ -177,7 +179,7 @@ itchCacheRefreshGame cache@ItchCache
 					-- delay
 					threadDelay apiCooldown
 					-- get uploads
-					updatedUploads <- (either (const []) id) <$> itchGetGameUploads itchApi gameId Nothing
+					updatedUploads <- (either (const V.empty) id) <$> itchGetGameUploads itchApi gameId Nothing
 					-- get upload infos and save uploads in cache
 					forM_ updatedUploads $ \upload@ItchUpload
 						{ itchUpload_id = uploadId
@@ -188,9 +190,9 @@ itchCacheRefreshGame cache@ItchCache
 						responseBuilds <- itchGetUploadBuilds itchApi uploadId Nothing
 						-- get latest build's info
 						maybeBuild <- case responseBuilds of
-							Right (ItchBuild
+							Right ((V.!? 0) -> Just ItchBuild
 								{ itchBuild_id = buildId
-								} : _) -> do
+								}) -> do
 								-- delay
 								threadDelay apiCooldown
 								-- get build info
@@ -202,7 +204,7 @@ itchCacheRefreshGame cache@ItchCache
 							, upload_updated = currentTime
 							}
 					return CachedGame
-						{ game_maybeItchGameWithUploads = Just (updatedItchGame, map itchUpload_id updatedUploads)
+						{ game_maybeItchGameWithUploads = Just (updatedItchGame, fmap itchUpload_id updatedUploads)
 						, game_updated = currentTime
 						}
 				Left _ -> return CachedGame
