@@ -75,7 +75,7 @@ staticSettingsAndMapping = $(do
 	(entries, mappings) <- liftM unzip $ liftM concat $ sequence
 		[ loadDirectory (runIO . BL.readFile) "static" "static"
 		, loadDirectory (process "$(npm bin)/stylus -c -p ") "static" "static-stylus"
-		, loadDirectory (process "$(npm bin)/uglifyjs --screw-ie8 -m -c") "static" "static-js"
+		, loadDirectory (process "$(npm bin)/uglifyjs -m -c") "static" "static-js"
 		]
 
 	-- log
