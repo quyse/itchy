@@ -1,0 +1,16 @@
+version: "3.2"
+
+services:
+  itchyd:
+    build:
+      context: .
+    image: insatia-balancer:latest
+    ports:
+    - target: 8888
+      published: 80
+      protocol: tcp
+      mode: host
+    restart: on-failure
+    volumes:
+    - "/opt/itchy:/var/itchy"
+    - "/var/run/docker.sock:/var/run/docker.sock"

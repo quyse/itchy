@@ -1,0 +1,34 @@
+- hosts: all
+  remote_user: root
+  tasks:
+  - name: create directory itchy-runner
+    file:
+      path: "/opt/itchy-runner"
+      state: directory
+      mode: 0755
+  - name: deploy itchy-runner dockerfile context
+    synchronize:
+      src: "runner/"
+      dest: "/opt/itchy-runner/"
+      owner: no
+      group: no
+  - name: build itchy-runner
+    docker_image:
+      name: itchy-runner
+      path: "/opt/itchy-runner"
+      force: yes
+  - name: create directory itchyd
+    file:
+      path: "/opt/itchyd"
+      state: directory
+      mode: 0755
+  - name: deploy itchyd dockerfile context
+    synchronize:
+      src: "itchyd/"
+      dest: "/opt/itchyd/"
+      owner: no
+      group: no
+  - name: build & deploy itchyd
+    docker_service:
+      build: yes
+      project_src: "/opt/itchyd"

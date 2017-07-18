@@ -9,12 +9,10 @@ module Itchy.ItchInvestigator
 	, investigateItchUpload
 	) where
 
-import qualified Data.ByteString as B
+import qualified Data.Aeson as A
 import Control.Concurrent.STM
-import qualified Data.Serialize as S
 import qualified Data.Text as T
-import qualified System.Posix.Files as P
-import qualified System.Posix.Temp as P
+import qualified Data.Text.Encoding as T
 import qualified System.Process as P
 
 import Flaw.Book
@@ -41,24 +39,16 @@ investigateItchUpload ItchInvestigator
 	{ itchInvestigatorApiKey = apiKey
 	, itchInvestigatorFlow = flow
 	} (ItchUploadId uploadId) uploadFileName callback = atomically $ asyncRunInFlow flow $ do
-	-- create temporary directory
-	workPath <- P.mkdtemp "/tmp/itchyrun"
-	P.setFileMode workPath 0o777
 	-- call docker
-	P.callProcess "docker"
+	maybeReport <- A.decodeStrict' . T.encodeUtf8 . T.pack <$> P.readProcess "docker"
 		[ "run"
 		, "--rm"
-		, "-v", workPath ++ ":/data"
 		, "itchy-runner" -- image
 		, "itchy-runner" -- command
 		, "--upload-filename", T.unpack uploadFileName
 		, "--upload-id", show uploadId
 		, "--api-key", T.unpack apiKey
 		, "--av-check"
-		, "--output", "/data/report.bin"
-		]
-	-- read report and call callback
-	reportBytes <- B.readFile $ workPath ++ "/report.bin"
-	case S.decode reportBytes of
-		Right report -> callback report
-		Left _ -> return ()
+		] ""
+	-- call callback
+	maybe (return ()) callback maybeReport

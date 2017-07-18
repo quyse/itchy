@@ -6,6 +6,7 @@ import Control.Exception
 import Control.Monad
 import qualified Data.Aeson as A
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as M
 import Data.IORef
 import Data.Maybe
@@ -135,7 +136,7 @@ main = do
 			}
 		]
 	(if null outputFileName then B.hPut stdout else B.writeFile outputFileName) .
-		(if outputYaml then Y.encode else S.encode) =<< readIORef reportRef
+		(if outputYaml then Y.encode else BL.toStrict . A.encode) =<< readIORef reportRef
 
 run :: Options -> IO ()
 run Options

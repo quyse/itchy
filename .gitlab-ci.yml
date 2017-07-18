@@ -7,7 +7,7 @@ before_script:
 
 stages:
 - build
-- image
+- deploy
 
 binaries:
   stage: build
@@ -24,40 +24,19 @@ binaries:
   - linux
   - x64
 
-itchyd-image:
-  stage: image
-  image: docker:git
-  services:
-  - docker:dind
+deploy:
+  stage: deploy
   dependencies:
   - binaries
-  variables:
-    REPO: registry.gitlab.com/quyse/itchy:latest
-    DOCKER_DRIVER: overlay
   script:
-  - "mv itchy/itchyd containers/itchyd/"
-  - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com"
-  - "docker build -t $REPO -f containers/itchyd/Dockerfile containers/itchyd"
-  - "docker push $REPO"
+  - "cp itchy/itchy-runner containers/runner/"
+  - "cp itchy/itchyd containers/itchyd/"
+  - >-
+    ansible-playbook
+    -i "$DEPLOY_HOSTS,"
+    containers/update.yml
   tags:
   - linux
-  - shared
-
-runner-image:
-  stage: image
-  image: docker:git
-  services:
-  - docker:dind
-  dependencies:
-  - binaries
-  variables:
-    REPO: quay.io/quyse/itchy-runner:latest
-    DOCKER_DRIVER: overlay
-  script:
-  - "mv itchy/itchy-runner containers/runner/"
-  - "docker login -u $QUAYIO_LOGIN -p $QUAYIO_PASSWORD quay.io"
-  - "docker build -t $REPO -f containers/runner/Dockerfile containers/runner"
-  - "docker push $REPO"
-  tags:
-  - linux
-  - shared
+  - x64
+  only:
+  - master
