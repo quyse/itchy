@@ -4,7 +4,7 @@ services:
   itchyd:
     build:
       context: .
-    image: insatia-balancer:latest
+    image: itchyd:latest
     ports:
     - target: 8888
       published: 80
