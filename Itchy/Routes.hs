@@ -272,6 +272,7 @@ getGameR gameId = W.runHandlerM $ do
 								H.div ! A.class_ "message" $ toHtml message
 		Nothing -> do
 			let gameByAuthor = locUnknownGame loc
+			W.header "Refresh" "3"
 			page gameByAuthor [(locHome loc, HomeR), (gameByAuthor, GameR gameId)] $ do
 				H.p $ H.toHtml $ locGameNotCached loc
 				H.p $ H.a ! A.href (H.toValue $ showRoute $ GameR gameId) $ H.toHtml $ locRefresh loc
@@ -353,7 +354,6 @@ page titleText pieces bodyHtml = do
 		Just (BA.convertFromBase BA.Base64URLUnpadded . T.encodeUtf8 -> Right (S.decode -> Right user)) -> Just user
 		_ -> Nothing
 	showRoute <- W.showRouteSub
-	loc <- getLocalization
 	W.html $ TL.toStrict $ H.renderHtml $ docTypeHtml $ do
 		H.head $ do
 			meta ! A.charset "utf-8"
