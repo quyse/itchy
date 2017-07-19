@@ -32,8 +32,10 @@ data ItchInvestigator = ItchInvestigator
 	{ itchInvestigatorItchCache :: !ItchCache
 	, itchInvestigatorFlow :: !Flow
 	, itchInvestigatorStalePeriod :: {-# UNPACK #-} !Int64
-	, itchInvestigatorRefreshingVar :: {-# UNPACK #-} !(TVar (M.Map ItchUploadId Bool))
+	, itchInvestigatorRefreshingVar :: {-# UNPACK #-} !(TVar (M.Map ItchUploadId (Either Int ())))
 	, itchInvestigatorProcessingQueue :: {-# UNPACK #-} !(TQueue (ItchUploadId, T.Text))
+	, itchInvestigatorNextQueuedVar :: {-# UNPACK #-} !(TVar Int)
+	, itchInvestigatorFirstQueuedVar :: {-# UNPACK #-} !(TVar Int)
 	}
 
 newItchInvestigator :: ItchCache -> T.Text -> Int -> Int64 -> IO (ItchInvestigator, IO ())
@@ -41,13 +43,16 @@ newItchInvestigator itchCache apiKey threadsCount stalePeriod = withSpecialBook 
 	flow <- book bk newFlow
 	refreshingVar <- newTVarIO M.empty
 	processingQueue <- newTQueueIO
+	nextQueuedVar <- newTVarIO 0
+	firstQueuedVar <- newTVarIO 0
 
 	-- spawn threads
 	let
 		thread = forever $ do
 			(uploadId@(ItchUploadId uploadIdInt), uploadFileName) <- atomically $ do
 				pair@(uploadId, _) <- readTQueue processingQueue
-				modifyTVar' refreshingVar $ M.insert uploadId True
+				modifyTVar' refreshingVar $ M.insert uploadId $ Right ()
+				modifyTVar' firstQueuedVar (+ 1)
 				return pair
 			print ("start investigation", uploadId)
 			-- call docker
@@ -82,11 +87,13 @@ newItchInvestigator itchCache apiKey threadsCount stalePeriod = withSpecialBook 
 		, itchInvestigatorStalePeriod = stalePeriod
 		, itchInvestigatorRefreshingVar = refreshingVar
 		, itchInvestigatorProcessingQueue = processingQueue
+		, itchInvestigatorNextQueuedVar = nextQueuedVar
+		, itchInvestigatorFirstQueuedVar = firstQueuedVar
 		}
 
 data ItchInvestigation
 	= ItchStartedInvestigation
-	| ItchQueuedInvestigation
+	| ItchQueuedInvestigation {-# UNPACK #-} !Int
 	| ItchProcessingInvestigation
 	| ItchInvestigation
 		{ itchInvestigationMaybeReport :: !(Maybe Report)
@@ -100,6 +107,8 @@ investigateItchUpload ItchInvestigator
 	, itchInvestigatorStalePeriod = stalePeriod
 	, itchInvestigatorRefreshingVar = refreshingVar
 	, itchInvestigatorProcessingQueue = processingQueue
+	, itchInvestigatorNextQueuedVar = nextQueuedVar
+	, itchInvestigatorFirstQueuedVar = firstQueuedVar
 	} uploadId uploadFileName autoRefresh = runInFlow flow $ do
 	maybeCachedReport <- itchCacheGetReport itchCache uploadId
 	case maybeCachedReport of
@@ -117,8 +126,14 @@ investigateItchUpload ItchInvestigator
 	where refresh = atomically $ do
 		refreshing <- readTVar refreshingVar
 		case M.lookup uploadId refreshing of
-			Just processing -> return $ if processing then ItchProcessingInvestigation else ItchQueuedInvestigation
+			Just entry -> case entry of
+				Left number -> do
+					firstQueued <- readTVar firstQueuedVar
+					return $ ItchQueuedInvestigation $ number - firstQueued
+				Right () -> return ItchProcessingInvestigation
 			Nothing -> do
-				writeTVar refreshingVar $ M.insert uploadId False refreshing
+				nextQueued <- readTVar nextQueuedVar
+				writeTVar nextQueuedVar $! nextQueued + 1
+				writeTVar refreshingVar $ M.insert uploadId (Left nextQueued) refreshing
 				writeTQueue processingQueue (uploadId, uploadFileName)
 				return ItchStartedInvestigation

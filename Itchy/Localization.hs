@@ -38,7 +38,7 @@ data Localization = Localization
 	, locBuildVersion :: !(T.Text -> T.Text -> RichText)
 	, locDoesntUseButler :: !T.Text
 	, locInvestigationStarted :: !T.Text
-	, locInvestigationQueued :: !T.Text
+	, locInvestigationQueued :: !(Int -> T.Text)
 	, locInvestigationProcessing :: !T.Text
 	, locInvestigationSucceeded :: !T.Text
 	, locInvestigationFailed :: !T.Text

@@ -190,7 +190,7 @@ getGameR gameId = W.runHandlerM $ do
 							Nothing -> H.toHtml $ locDoesntUseButler loc
 						H.td $ case investigation of
 							ItchStartedInvestigation -> H.toHtml $ locInvestigationStarted loc
-							ItchQueuedInvestigation -> H.toHtml $ locInvestigationQueued loc
+							ItchQueuedInvestigation n -> H.toHtml $ locInvestigationQueued loc $ n + 1
 							ItchProcessingInvestigation -> H.toHtml $ locInvestigationProcessing loc
 							ItchInvestigation
 								{ itchInvestigationMaybeReport = maybeReport
