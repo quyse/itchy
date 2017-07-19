@@ -10,6 +10,7 @@ module Itchy.ItchCache
 	, newItchCache
 	, itchCacheGetGame
 	, itchCacheGetUpload
+	, CachedReport(..)
 	, itchCacheGetReport
 	, itchCachePutReport
 	) where
@@ -219,8 +220,14 @@ itchCacheGetUpload cache uploadId = do
 	maybeCachedUpload <- itchCacheGet CacheKeyUpload cache uploadId
 	return $ maybeCachedUpload >>= upload_maybeItchUploadWithBuild
 
-itchCacheGetReport :: ItchCache -> ItchUploadId -> IO (Maybe Report)
+data CachedReport = CachedReport
+	{ cachedReport_maybeReport :: !(Maybe Report)
+	, cachedReport_updated :: {-# UNPACK #-} !Int64
+	} deriving Generic
+instance S.Serialize CachedReport
+
+itchCacheGetReport :: ItchCache -> ItchUploadId -> IO (Maybe CachedReport)
 itchCacheGetReport = itchCacheGet CacheKeyReport
 
-itchCachePutReport :: ItchCache -> ItchUploadId -> Report -> IO ()
+itchCachePutReport :: ItchCache -> ItchUploadId -> CachedReport -> IO ()
 itchCachePutReport = itchCachePut CacheKeyReport

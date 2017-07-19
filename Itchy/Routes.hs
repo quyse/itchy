@@ -13,6 +13,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteArray.Encoding as BA
 import qualified Data.HashMap.Strict as HM
+import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -22,8 +23,9 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Vector as V
 import Data.Word
-import qualified Data.Yaml as Y
+import Foreign.C.Types
 import qualified Network.HTTP.Types as HT
+import System.Posix.Time
 import Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import qualified Text.Blaze.Html.Renderer.Text as H(renderHtml)
@@ -45,6 +47,7 @@ data App = App
 	{ appItchApi :: !ItchApi
 	, appItchCache :: !ItchCache
 	, appItchInvestigator :: !ItchInvestigator
+	, appItchInvestigationStalePeriod :: {-# UNPACK #-} !Int64
 	}
 
 localizations :: [(T.Text, Localization)]
@@ -90,6 +93,8 @@ getGameR :: Word64 -> W.Handler App
 getGameR gameId = W.runHandlerM $ do
 	App
 		{ appItchCache = itchCache
+		, appItchInvestigator = itchInvestigator
+		, appItchInvestigationStalePeriod = investigationStalePeriod
 		} <- W.sub
 	showRoute <- W.showRouteSub
 	loc <- getLocalization
@@ -123,9 +128,12 @@ getGameR gameId = W.runHandlerM $ do
 					, itchUpload_filename = fileName
 					} -> Just $ fromMaybe fileName maybeDisplayName
 				Nothing -> Nothing
-			maybeReports <- liftIO $ forM gameUploads $ \(ItchUpload
+			investigations <- liftIO $ forM gameUploads $ \(ItchUpload
 				{ itchUpload_id = uploadId
-				}, _maybeBuild) -> itchCacheGetReport itchCache uploadId
+				, itchUpload_filename = uploadFileName
+				}, _maybeBuild) -> investigateItchUpload itchInvestigator uploadId uploadFileName False
+			CTime currentTime <- liftIO epochTime
+			let reinvestigateTimeCutoff = currentTime - investigationStalePeriod
 			page gameByAuthor [(locHome loc, HomeR), (gameByAuthor, GameR gameId)] $ H.div ! A.class_ "game_info" $ do
 				case maybeGameCoverUrl of
 					Just coverUrl -> img ! A.class_ "cover" ! A.src (toValue coverUrl)
@@ -152,7 +160,7 @@ getGameR gameId = W.runHandlerM $ do
 						th $ toHtml $ locTags loc
 						th "Butler"
 						th $ toHtml $ locReport loc
-					forM_ (V.zip gameUploads maybeReports) $ \((ItchUpload
+					forM_ (V.zip gameUploads investigations) $ \((ItchUpload
 						{ itchUpload_id = ItchUploadId uploadId
 						, itchUpload_display_name = fromMaybe "" -> uploadDisplayName
 						, itchUpload_filename = uploadFileName
@@ -163,7 +171,7 @@ getGameR gameId = W.runHandlerM $ do
 						, itchUpload_p_linux = uploadLinux
 						, itchUpload_p_osx = uploadMacOS
 						, itchUpload_p_android = uploadAndroid
-						}, maybeBuild), maybeReport) -> H.tr ! A.class_ "upload" $ do
+						}, maybeBuild), investigation) -> H.tr ! A.class_ "upload" $ do
 						H.td ! A.class_ "name" $ toHtml uploadDisplayName
 						H.td ! A.class_ "filename" $ a ! A.href (toValue $ showRoute $ UploadR uploadId) $ toHtml uploadFileName
 						H.td $ toHtml $ locSizeInBytes loc uploadSize
@@ -180,15 +188,23 @@ getGameR gameId = W.runHandlerM $ do
 								, itchBuild_user_version = fromMaybe (locNoUserVersion loc) -> buildUserVersion
 								} -> H.toHtml $ locBuildVersion loc buildVersion buildUserVersion
 							Nothing -> H.toHtml $ locDoesntUseButler loc
-						H.td $ H.toHtml $ case maybeReport of
-							Just _ -> locReportReady loc
-							Nothing -> locReportNotReady loc
+						H.td $ case investigation of
+							ItchStartedInvestigation -> H.toHtml $ locInvestigationStarted loc
+							ItchQueuedInvestigation -> H.toHtml $ locInvestigationQueued loc
+							ItchProcessingInvestigation -> H.toHtml $ locInvestigationProcessing loc
+							ItchInvestigation
+								{ itchInvestigationMaybeReport = maybeReport
+								, itchInvestigationTime = t
+								} -> do
+								H.toHtml $ (if isJust maybeReport then locInvestigationSucceeded else locInvestigationFailed) loc
+								when (t < reinvestigateTimeCutoff) $ H.form ! A.class_ "formreprocess" ! A.action (toValue $ showRoute $ InvestigateUploadR uploadId) ! A.method "POST" $
+									H.input ! A.type_ "submit" ! A.value (toValue $ locReinvestigate loc)
 				h2 $ toHtml $ locReport loc
 				let
-					reportsCount = foldr (\maybeReport !c -> case maybeReport of
-						Just _ -> c + 1
-						Nothing -> c
-						) 0 maybeReports
+					reportsCount = foldr (\investigation !c -> case investigation of
+						ItchInvestigation {} -> c + 1
+						_ -> c
+						) 0 investigations
 					in when (reportsCount < V.length gameUploads) $ H.p $ H.toHtml $ locReportNotComplete loc reportsCount (V.length gameUploads)
 				let AnalysisGame
 					{ analysisGame_uploads = analysisUploads
@@ -203,10 +219,12 @@ getGameR gameId = W.runHandlerM $ do
 						}
 					, analysisGame_records = gameRecords
 					} = analyseGame loc game $ concat $
-					flip fmap (V.toList $ V.zip gameUploads maybeReports) $
-					\((u, _), mr) -> case mr of
-					Just r -> [(u, r)]
-					Nothing -> []
+					flip fmap (V.toList $ V.zip gameUploads investigations) $
+					\((u, _), inv) -> case inv of
+					ItchInvestigation
+						{ itchInvestigationMaybeReport = Just r
+						} -> [(u, r)]
+					_ -> []
 
 				let uploadsRecords = concat $ Prelude.map analysisUpload_records analysisUploads
 				let records = flip sortOn
@@ -251,18 +269,11 @@ getGameR gameId = W.runHandlerM $ do
 							H.td $ H.div ! A.class_ "record" $ toHtml name
 							H.td $ unless (message == RichText []) $
 								H.div ! A.class_ "message" $ toHtml message
-
-				forM_ (V.zip gameUploads maybeReports) $ \((ItchUpload
-					{ itchUpload_id = ItchUploadId uploadId
-					}, _maybeBuild), maybeReport) -> do
-					case maybeReport of
-						Just report -> H.pre $ toHtml $ T.decodeUtf8 $ Y.encode report
-						Nothing -> H.p "No report has been generated yet."
-					H.form ! A.action (toValue $ showRoute $ InvestigateUploadR uploadId) ! A.method "POST" $
-						H.input ! A.type_ "submit" ! A.value (toValue $ "Process upload " <> show uploadId)
 		Nothing -> do
 			let gameByAuthor = locUnknownGame loc
-			page gameByAuthor [(locHome loc, HomeR), (gameByAuthor, GameR gameId)] $ H.p $ H.toHtml $ locGameNotCached loc
+			page gameByAuthor [(locHome loc, HomeR), (gameByAuthor, GameR gameId)] $ do
+				H.p $ H.toHtml $ locGameNotCached loc
+				H.p $ H.a ! A.href (H.toValue $ showRoute $ GameR gameId) $ H.toHtml $ locRefresh loc
 
 getUploadR :: Word64 -> W.Handler App
 getUploadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
@@ -285,7 +296,7 @@ postInvestigateUploadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
 		Just (ItchUpload
 			{ itchUpload_filename = uploadFileName
 			}, _maybeBuild) -> do
-			liftIO $ investigateItchUpload itchInvestigator uploadId uploadFileName $ itchCachePutReport itchCache uploadId
+			void $ liftIO $ investigateItchUpload itchInvestigator uploadId uploadFileName True
 			W.status HT.noContent204
 		Nothing -> W.status HT.notFound404
 

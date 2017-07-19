@@ -37,8 +37,12 @@ data Localization = Localization
 	, locNoUserVersion :: !T.Text
 	, locBuildVersion :: !(T.Text -> T.Text -> RichText)
 	, locDoesntUseButler :: !T.Text
-	, locReportReady :: !T.Text
-	, locReportNotReady :: !T.Text
+	, locInvestigationStarted :: !T.Text
+	, locInvestigationQueued :: !T.Text
+	, locInvestigationProcessing :: !T.Text
+	, locInvestigationSucceeded :: !T.Text
+	, locInvestigationFailed :: !T.Text
+	, locReinvestigate :: !T.Text
 	, locReport :: !T.Text
 	, locReportNotComplete :: !(Int -> Int -> RichText)
 	, locRecordSeverity :: !T.Text
@@ -50,6 +54,7 @@ data Localization = Localization
 	, locScopeEntry :: !(Maybe T.Text -> T.Text -> RichText)
 	, locUnknownGame :: !T.Text
 	, locGameNotCached :: !T.Text
+	, locRefresh :: !T.Text
 	, locSeverityOk :: !T.Text
 	, locSeverityInfo :: !T.Text
 	, locSeverityTip :: !T.Text

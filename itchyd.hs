@@ -54,6 +54,8 @@ data Config = Config
 	, config_itchApiKey :: !T.Text
 	, config_itchApiCooldown :: !Int
 	, config_cacheStalePeriod :: !Int64
+	, config_investigationStalePeriod :: !Int64
+	, config_investigatorThreadsCount :: !Int
 	} deriving Generic
 
 instance A.FromJSON Config where
@@ -75,13 +77,15 @@ run Options
 		, config_itchApiKey = itchApiKey
 		, config_itchApiCooldown = itchApiCooldown
 		, config_cacheStalePeriod = cacheStalePeriod
+		, config_investigationStalePeriod = investigationStalePeriod
+		, config_investigatorThreadsCount = investigatorThreadsCount
 		} <- case eitherConfig of
 		Right config -> return config
 		Left err -> throwIO err
 
 	itchApi <- book bk $ newItchApi httpManager itchApiKey
 	itchCache <- book bk $ newItchCache itchApi dbFileName cacheStalePeriod itchApiCooldown
-	itchInvestigator <- book bk $ newItchInvestigator itchApiKey
+	itchInvestigator <- book bk $ newItchInvestigator itchCache itchApiKey investigatorThreadsCount investigationStalePeriod
 
 	logger <- W.mkRequestLogger $ W.def
 		{ W.outputFormat = W.Detailed True
@@ -98,5 +102,6 @@ run Options
 			{ appItchApi = itchApi
 			, appItchCache = itchCache
 			, appItchInvestigator = itchInvestigator
+			, appItchInvestigationStalePeriod = investigationStalePeriod
 			}
 		W.catchall $ W.staticApp staticSettings
