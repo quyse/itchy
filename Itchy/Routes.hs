@@ -173,7 +173,7 @@ getGameR gameId = W.runHandlerM $ do
 						, itchUpload_p_android = uploadAndroid
 						}, maybeBuild), investigation) -> H.tr ! A.class_ "upload" $ do
 						H.td ! A.class_ "name" $ toHtml uploadDisplayName
-						H.td ! A.class_ "filename" $ a ! A.href (toValue $ showRoute $ UploadR uploadId) $ toHtml uploadFileName
+						H.td ! A.class_ "filename" $ {- a ! A.href (toValue $ showRoute $ UploadR uploadId) $ -} toHtml uploadFileName
 						H.td $ toHtml $ locSizeInBytes loc uploadSize
 						H.td $ do
 							if uploadWindows then H.span ! A.class_ "tag" $ "windows" else mempty
@@ -205,7 +205,7 @@ getGameR gameId = W.runHandlerM $ do
 						ItchInvestigation {} -> c + 1
 						_ -> c
 						) 0 investigations
-					in when (reportsCount < V.length gameUploads) $ H.p $ H.toHtml $ locReportNotComplete loc reportsCount (V.length gameUploads)
+					in when (reportsCount < V.length gameUploads) $ H.p $ (H.toHtml $ locReportNotComplete loc reportsCount (V.length gameUploads)) <> " " <> (H.a ! A.href (H.toValue $ showRoute $ GameR gameId) $ H.toHtml $ locRefresh loc)
 				let AnalysisGame
 					{ analysisGame_uploads = analysisUploads
 					, analysisGame_release = AnalysisUploadGroup
@@ -245,7 +245,7 @@ getGameR gameId = W.runHandlerM $ do
 						H.th $ toHtml $ locRecordSeverity loc
 						H.th ! A.class_ "scope" $ toHtml $ locRecordScope loc
 						H.th ! A.class_ "name" $ toHtml $ locRecordName loc
-						H.th ! A.class_ "name" $ mempty
+						H.th ! A.class_ "name" $ toHtml $ locRecordMessage loc
 					forM_ records $ \Record
 						{ recordScope = scope
 						, recordSeverity = severity
@@ -329,7 +329,7 @@ getSearchR = W.runHandlerM $ do
 	showRoute <- W.showRouteSub
 	loc <- getLocalization
 	searchText <- fromMaybe "" <$> W.getParam "s"
-	games <- liftIO $ itchSearchGame itchApi searchText
+	games <- if T.null searchText then return V.empty else liftIO $ itchSearchGame itchApi searchText
 	page (locSearch loc) [(locHome loc, HomeR), (locSearch loc, SearchR)] $ do
 		H.form ! A.method "GET" ! A.action (H.toValue $ showRoute SearchR) $ do
 			H.input ! A.type_ "text" ! A.name "s"

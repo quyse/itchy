@@ -58,6 +58,7 @@ localizationEn = Localization
 	, locRecordSeverity = "Status"
 	, locRecordScope = "Scope"
 	, locRecordName = "Test"
+	, locRecordMessage = "Clarification"
 	, locScopeProject = "Project"
 	, locScopeUploadGroup = \case
 		UploadGroupRelease -> "Release Uploads"
@@ -101,7 +102,7 @@ localizationEn = Localization
 	, locMessageAboutWindowsBinaryX86 = "32-bit systems are still exist among players, so it's nice to provide 32-bit build (in which case 64-bit is not really necessary, as 32-bit binaries are perfectly playable on 64-bit Windows)."
 	, locRecordNoLinuxBinaryX64 = "No 64-bit Linux binary"
 	, locRecordNoLinuxBinaryX86 = "No 32-bit Linux binary"
-	, locRecordHasLinuxBinaryX64X86 = "Both 64-bit and 32-bit Linux binaries present"
+	, locRecordHasLinuxBinaryX64X86 = "Both 64-bit and 32-bit Linux binaries are present"
 	, locMessageAboutLinuxBinaryArchs = "It's recommended to provide both 64-bit and 32-bit Linux binaries. Most of the Linux system are 64-bit nowadays. Contrary to other OSes, 32-bit programs usually cannot be launched on 64-bit Linux out-of-the-box, installation of additional (\"multilib\") libraries may be required. It's also impossible to run 64-bit program on 32-bit Linux system, which's still used by some players."
 	, locRecordMacOSBinaryX86Exists = "There's 32-bit macOS binary"
 	, locRecordNoMacOSBinaryX86 = "No 32-bit macOS binary"

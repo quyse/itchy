@@ -58,6 +58,7 @@ localizationRu = Localization
 	, locRecordSeverity = "Статус"
 	, locRecordScope = "Субъект"
 	, locRecordName = "Тест"
+	, locRecordMessage = "Пояснение"
 	, locScopeProject = "Проект"
 	, locScopeUploadGroup = \case
 		UploadGroupRelease -> "Релизные пакеты"
