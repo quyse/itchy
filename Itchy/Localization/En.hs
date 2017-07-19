@@ -22,7 +22,8 @@ import Itchy.Report.Record
 localizationEn :: Localization
 localizationEn = Localization
 	{ locLanguageName = "English"
-	, locHome = "Home"
+	, locHome = "itch.io Sanity Checker"
+	, locWelcome = "Welcome to itch.io Sanity Checker. Try to search for your game by entering a few keywords, and wait for a report. Beware: it's alpha software, results may be weird."
 	, locSearch = "Search"
 	, locGameByAuthor = \game author -> game <> " by " <> author
 	, locDescription = \desc -> "Description: " <> desc
@@ -48,13 +49,13 @@ localizationEn = Localization
 	, locBuildVersion = \buildVersion buildUserVersion -> "version: " <> RichText [RichChunkCode buildVersion] <> ", user version: " <> RichText [RichChunkCode buildUserVersion]
 	, locDoesntUseButler = "doesn't use butler"
 	, locInvestigationStarted = "enqueuing"
-	, locInvestigationQueued = \n -> T.pack $ shows n " in queue"
+	, locInvestigationQueued = \n -> T.pack ('#' : shows n " in queue")
 	, locInvestigationProcessing = "processing"
 	, locInvestigationSucceeded = "ready"
 	, locInvestigationFailed = "failed"
 	, locReinvestigate = "Reprocess"
 	, locReport = "Report"
-	, locReportNotComplete = \a b -> "Report is not complete! Processed " <> RichText [RichChunkCode $ T.pack $ show a] <> " of " <> RichText [RichChunkCode $ T.pack $ show b] <> " uploads."
+	, locReportNotComplete = \a b -> "Report is not complete! Processed " <> RichText [RichChunkCode $ T.pack $ show a] <> " " <> plural a "upload" "uploads" <> " of " <> RichText [RichChunkCode $ T.pack $ show b] <> "."
 	, locRecordSeverity = "Status"
 	, locRecordScope = "Scope"
 	, locRecordName = "Test"
@@ -112,6 +113,9 @@ localizationEn = Localization
 	, locMessageAboutDemo = "You can provide free demo, so players can evaluate your game before buying."
 	, locRecordOptedIntoPressSystem = "Opted into itch.io press system"
 	, locRecordNotOptedIntoPressSystem = "Not opted into itch.io press system"
-	, locMessageAboutPressSystem = "You can opt your account into itch.io's press system, this will enable special press account users to find your paid games and download it for free."
+	, locMessageAboutPressSystem = "You can opt your account into " <> RichText [RichChunkLink "https://itch.io/press/user-list" "itch.io's press system"] <> ", this will enable special press account users to find your paid games and download it for free."
 	, locRecordNoUploads = "There're no uploads"
 	}
+
+plural :: Integral n => n -> a -> a -> a
+plural (abs -> n) one other = if n == 1 then one else other

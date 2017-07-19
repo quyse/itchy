@@ -84,7 +84,8 @@ getHomeR :: W.Handler App
 getHomeR = W.runHandlerM $ do
 	showRoute <- W.showRouteSub
 	loc <- getLocalization
-	page (locHome loc) [(locHome loc, HomeR)] $
+	page (locHome loc) [(locHome loc, HomeR)] $ do
+		H.p $ H.toHtml $ locWelcome loc
 		H.form ! A.method "GET" ! A.action (H.toValue $ showRoute SearchR) $ do
 			H.input ! A.type_ "text" ! A.name "s"
 			H.input ! A.type_ "submit" ! A.value (H.toValue $ locSearch loc)
@@ -332,7 +333,7 @@ getSearchR = W.runHandlerM $ do
 	games <- if T.null searchText then return V.empty else liftIO $ itchSearchGame itchApi searchText
 	page (locSearch loc) [(locHome loc, HomeR), (locSearch loc, SearchR)] $ do
 		H.form ! A.method "GET" ! A.action (H.toValue $ showRoute SearchR) $ do
-			H.input ! A.type_ "text" ! A.name "s"
+			H.input ! A.type_ "text" ! A.name "s" ! A.value (H.toValue searchText)
 			H.input ! A.type_ "submit" ! A.value (H.toValue $ locSearch loc)
 		H.div ! A.class_ "searchresults" $ forM_ games $ \ItchGameShort
 			{ itchGameShort_id = ItchGameId gameId
@@ -352,6 +353,7 @@ page titleText pieces bodyHtml = do
 		Just (BA.convertFromBase BA.Base64URLUnpadded . T.encodeUtf8 -> Right (S.decode -> Right user)) -> Just user
 		_ -> Nothing
 	showRoute <- W.showRouteSub
+	loc <- getLocalization
 	W.html $ TL.toStrict $ H.renderHtml $ docTypeHtml $ do
 		H.head $ do
 			meta ! A.charset "utf-8"

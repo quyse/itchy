@@ -17,6 +17,7 @@ import Itchy.Report.Record
 data Localization = Localization
 	{ locLanguageName :: !T.Text
 	, locHome :: !T.Text
+	, locWelcome :: !T.Text
 	, locSearch :: !T.Text
 	, locGameByAuthor :: !(T.Text -> T.Text -> T.Text)
 	, locDescription :: !(T.Text -> T.Text)

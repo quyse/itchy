@@ -22,7 +22,8 @@ import Itchy.Report.Record
 localizationRu :: Localization
 localizationRu = Localization
 	{ locLanguageName = "Русский"
-	, locHome = "Главная"
+	, locHome = "Ковырятель itch.io"
+	, locWelcome = "Ковырятель itch.io говорит вам привет! Попробуйте найти вашу игру, введя несколько ключевых слов, и дождитесь появления отчёта. Внимание: это альфа версия, может показывать странное."
 	, locSearch = "Поиск"
 	, locGameByAuthor = \game author -> game <> " от " <> author
 	, locDescription = \desc -> "Описание: " <> desc
@@ -48,13 +49,13 @@ localizationRu = Localization
 	, locBuildVersion = \buildVersion buildUserVersion -> "версия: " <> RichText [RichChunkCode buildVersion] <> ", пользовательская версия: " <> RichText [RichChunkCode buildUserVersion]
 	, locDoesntUseButler = "не использует butler"
 	, locInvestigationStarted = "ставим в очередь"
-	, locInvestigationQueued = \n -> T.pack $ shows n " в очереди"
+	, locInvestigationQueued = \n -> T.pack ("номер " ++ shows n " в очереди")
 	, locInvestigationProcessing = "обрабатывается"
 	, locInvestigationSucceeded = "готов"
 	, locInvestigationFailed = "ошибка"
 	, locReinvestigate = "Обработать ещё раз"
 	, locReport = "Отчёт"
-	, locReportNotComplete = \a b -> "Отчёт неполон! Обработано " <> RichText [RichChunkCode $ T.pack $ show a] <> " из " <> RichText [RichChunkCode $ T.pack $ show b] <> " пакетов."
+	, locReportNotComplete = \a b -> "Отчёт неполон! Обработано " <> RichText [RichChunkCode $ T.pack $ show a] <> " " <> plural a "пакет" "пакета" "пакетов" <> " из " <> RichText [RichChunkCode $ T.pack $ show b] <> "."
 	, locRecordSeverity = "Статус"
 	, locRecordScope = "Субъект"
 	, locRecordName = "Тест"
@@ -112,6 +113,13 @@ localizationRu = Localization
 	, locMessageAboutDemo = "Вы можете добавить демо-версию, чтобы игроки могли лучше оценить вашу игру перед покупкой."
 	, locRecordOptedIntoPressSystem = "Входит в программу доступа для прессы itch.io"
 	, locRecordNotOptedIntoPressSystem = "Не входит в программу доступа для прессы itch.io"
-	, locMessageAboutPressSystem = "Вы можете включить игры вашего аккаунта в программу доступа для прессы itch.io, позволяющую проверенным аккаунтам от игровой прессы загружать и играть в ваши игры бесплатно."
+	, locMessageAboutPressSystem = "Вы можете включить игры вашего аккаунта в " <> RichText [RichChunkLink "https://itch.io/press/user-list" "программу доступа для прессы itch.io"] <> ", позволяющую проверенным аккаунтам от игровой прессы загружать и играть в ваши игры бесплатно."
 	, locRecordNoUploads = "Нет пакетов"
 	}
+
+plural :: Integral n => n -> a -> a -> a -> a
+plural ((`rem` 100) . abs -> nn@((`rem` 10) -> n)) one few other =
+	if nn >= 10 && nn <= 19 then other
+	else if n == 1 then one
+	else if n > 1 && n < 5 then few
+	else other
