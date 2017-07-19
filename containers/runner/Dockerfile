@@ -9,6 +9,7 @@ RUN apt-get install -y netbase ca-certificates unar file
 RUN apt-get install -y clamav
 RUN freshclam
 RUN useradd -m -s /bin/bash runner
+ENV GHCRTS=-N1
 COPY itchy-runner /usr/bin/itchy-runner
 WORKDIR /home/runner
 USER runner
