@@ -321,6 +321,10 @@ getUploadR uploadId = W.runHandlerM $ do
 										H.th $ H.toHtml $ locTags loc
 									let
 										tag = H.span ! A.class_ "tag"
+										tagArch = \case
+											ReportArch_unknown -> mempty
+											ReportArch_x86 -> tag "x86"
+											ReportArch_x64 -> tag "x64"
 										printEntries level = mapM_ (printEntry level) . M.toAscList
 										printEntry level (entryName, entry) = do
 											H.tr $ do
@@ -352,9 +356,25 @@ getUploadR uploadId = W.runHandlerM $ do
 														{ reportEntry_parses = entryParses
 														} -> forM_ entryParses $ \case
 														ReportParse_itchToml {} -> tag ".itch.toml"
-														ReportParse_binaryPe {} -> tag "PE"
-														ReportParse_binaryElf {} -> tag "ELF"
-														ReportParse_binaryMachO {} -> tag "Mach-O"
+														ReportParse_binaryPe ReportBinaryPe
+															{ reportBinaryPe_arch = arch
+															, reportBinaryPe_isCLR = isCLR
+															} -> do
+															tag "PE"
+															when isCLR $ tag "CLR"
+															tagArch arch
+														ReportParse_binaryElf ReportBinaryElf
+															{ reportBinaryElf_arch = arch
+															} -> do
+															tag "ELF"
+															tagArch arch
+														ReportParse_binaryMachO ReportBinaryMachO
+															{ reportBinaryMachO_binaries = subBinaries
+															} -> do
+															tag "Mach-O"
+															forM_ subBinaries $ \ReportMachOSubBinary
+																{ reportMachoSubBinary_arch = arch
+																} -> tagArch arch
 													ReportEntry_directory {} -> mempty
 													ReportEntry_symlink
 														{ reportEntry_link = entryLink
