@@ -200,6 +200,7 @@ analyseUpload loc itchUpload@ItchUpload
 	foldParsePlatform parse platforms = case parse of
 		ReportParse_binaryPe ReportBinaryPe
 			{ reportBinaryPe_arch = arch
+			, reportBinaryPe_isCLR = False -- don't count .NET as Windows
 			} -> HS.insert (PlatformWindows, arch) platforms
 		ReportParse_binaryElf ReportBinaryElf
 			{ reportBinaryElf_arch = arch
