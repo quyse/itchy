@@ -211,7 +211,7 @@ instance A.FromJSON ItchUrlResponse where
 
 newtype ItchGameId = ItchGameId Word64 deriving (Eq, Ord, Generic, Show, S.Serialize, A.FromJSON, Hashable)
 data ItchGame = ItchGame
-	{ itchGame_id :: !ItchGameId
+	{ itchGame_id :: {-# UNPACK #-} !ItchGameId
 	, itchGame_title :: !T.Text
 	, itchGame_url :: !T.Text
 	, itchGame_cover_url :: !(Maybe T.Text)
@@ -221,7 +221,7 @@ data ItchGame = ItchGame
 	, itchGame_in_press_system :: !Bool
 	, itchGame_short_text :: !(Maybe T.Text)
 	, itchGame_has_demo :: !Bool
-	, itchGame_min_price :: !Int
+	, itchGame_min_price :: {-# UNPACK #-} !Int
 	, itchGame_p_windows :: !Bool
 	, itchGame_p_linux :: !Bool
 	, itchGame_p_osx :: !Bool
@@ -234,7 +234,7 @@ instance A.FromJSON ItchGame where
 		}
 
 data ItchGameShort = ItchGameShort
-	{ itchGameShort_id :: !ItchGameId
+	{ itchGameShort_id :: {-# UNPACK #-} !ItchGameId
 	, itchGameShort_title :: !T.Text
 	, itchGameShort_cover_url :: !(Maybe T.Text)
 	} deriving (Generic, Show)
@@ -249,7 +249,7 @@ data ItchUpload = ItchUpload
 	{ itchUpload_id :: !ItchUploadId
 	, itchUpload_display_name :: !(Maybe T.Text)
 	, itchUpload_filename :: !T.Text
-	, itchUpload_game_id :: !Int
+	, itchUpload_game_id :: {-# UNPACK #-} !ItchGameId
 	, itchUpload_demo :: !Bool
 	, itchUpload_preorder :: !Bool
 	, itchUpload_size :: !Integer
