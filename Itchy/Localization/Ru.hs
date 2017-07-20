@@ -38,6 +38,7 @@ localizationRu = Localization
 	, locUploads = "Пакеты"
 	, locDisplayName = "Отображаемое имя"
 	, locFileName = "Имя файла"
+	, locAccessMode = "Доступ"
 	, locSize = "Размер"
 	, locTags = "Теги"
 	, locSizeInBytes = \size ->
@@ -45,6 +46,7 @@ localizationRu = Localization
 		else if size < 2 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / 1024 :: Float) "") <> " Кб"
 		else if size < 2 * 1024 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024) :: Float) "") <> " Мб"
 		else T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024 * 1024) :: Float) "") <> " Гб"
+	, locSymlink = "симв. ссылка"
 	, locNoUserVersion = "не указана"
 	, locBuildVersion = \buildVersion buildUserVersion -> "версия: " <> RichText [RichChunkCode buildVersion] <> ", пользовательская версия: " <> RichText [RichChunkCode buildUserVersion]
 	, locDoesntUseButler = "не использует butler"

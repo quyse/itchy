@@ -3,7 +3,7 @@ Module: Itchy.Routes
 Description: Web app routes
 -}
 
-{-# LANGUAGE BangPatterns, MultiParamTypeClasses, OverloadedLists, OverloadedStrings, QuasiQuotes, RankNTypes, TemplateHaskell, TypeFamilies, ViewPatterns #-}
+{-# LANGUAGE BangPatterns, LambdaCase, MultiParamTypeClasses, OverloadedLists, OverloadedStrings, QuasiQuotes, RankNTypes, TemplateHaskell, TypeFamilies, ViewPatterns #-}
 
 module Itchy.Routes
 	( App(..)
@@ -11,10 +11,12 @@ module Itchy.Routes
 
 import Control.Monad
 import Control.Monad.IO.Class
+import Data.Bits
 import qualified Data.ByteArray.Encoding as BA
 import qualified Data.HashMap.Strict as HM
 import Data.Int
 import Data.List
+import qualified Data.Map.Strict as M
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Serialize as S
@@ -39,6 +41,7 @@ import Itchy.Localization
 import Itchy.Localization.En
 import Itchy.Localization.RichText
 import Itchy.Localization.Ru
+import Itchy.Report
 import Itchy.Report.Analysis
 import Itchy.Report.Record
 import Itchy.Static
@@ -75,6 +78,7 @@ W.mkRoute "App" [W.parseRoutes|
 / HomeR GET
 /game/#Word64 GameR GET
 /upload/#Word64 UploadR GET
+/upload/#Word64/download UploadDownloadR GET
 /investigateUpload/#Word64 InvestigateUploadR POST
 /auth AuthR POST
 /search SearchR GET
@@ -197,7 +201,9 @@ getGameR gameId = W.runHandlerM $ do
 								{ itchInvestigationMaybeReport = maybeReport
 								, itchInvestigationTime = t
 								} -> do
-								H.toHtml $ (if isJust maybeReport then locInvestigationSucceeded else locInvestigationFailed) loc
+								if isJust maybeReport
+									then H.a ! A.href (H.toValue $ showRoute $ UploadR uploadId) ! A.target "_blank" $ H.toHtml $ locInvestigationSucceeded loc
+									else H.toHtml $ locInvestigationFailed loc
 								when (t < reinvestigateTimeCutoff) $ H.form ! A.class_ "formreprocess" ! A.action (toValue $ showRoute $ InvestigateUploadR uploadId) ! A.method "POST" $
 									H.input ! A.type_ "submit" ! A.value (toValue $ locReinvestigate loc)
 				h2 $ toHtml $ locReport loc
@@ -278,7 +284,96 @@ getGameR gameId = W.runHandlerM $ do
 				H.p $ H.a ! A.href (H.toValue $ showRoute $ GameR gameId) $ H.toHtml $ locRefresh loc
 
 getUploadR :: Word64 -> W.Handler App
-getUploadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
+getUploadR uploadId = W.runHandlerM $ do
+	App
+		{ appItchCache = itchCache
+		, appItchInvestigator = itchInvestigator
+		} <- W.sub
+	loc <- getLocalization
+	maybeUpload <- liftIO $ itchCacheGetUpload itchCache $ ItchUploadId uploadId
+	case maybeUpload of
+		Just (ItchUpload
+			{ itchUpload_filename = uploadFileName
+			, itchUpload_game_id = ItchGameId gameId
+			}, _maybeBuild) -> do
+			maybeGameWithUploads <- liftIO $ itchCacheGetGame itchCache $ ItchGameId gameId
+			case maybeGameWithUploads of
+				Just (ItchGame
+					{ itchGame_title = gameTitle
+					, itchGame_user = ItchUser
+						{ itchUser_username = creatorUserName
+						}
+					}, _) -> do
+					let gameByAuthor = locGameByAuthor loc gameTitle creatorUserName
+					investigation <- liftIO $ investigateItchUpload itchInvestigator (ItchUploadId uploadId) uploadFileName False
+					case investigation of
+						ItchInvestigation
+							{ itchInvestigationMaybeReport = maybeReport
+							} -> page uploadFileName [(locHome loc, HomeR), (gameByAuthor, GameR gameId), (uploadFileName, UploadR uploadId)] $ do
+							case maybeReport of
+								Just Report
+									{ report_unpack = ReportUnpack_succeeded rootEntries
+									} -> H.table ! A.class_ "entries" $ do
+									H.tr $ do
+										H.th $ H.toHtml $ locFileName loc
+										H.th $ H.toHtml $ locSize loc
+										H.th $ H.toHtml $ locAccessMode loc
+										H.th $ H.toHtml $ locTags loc
+									let
+										tag = H.span ! A.class_ "tag"
+										printEntries level = mapM_ (printEntry level) . M.toAscList
+										printEntry level (entryName, entry) = do
+											H.tr $ do
+												H.td ! A.style ("padding-left: " <> (H.toValue $ 5 + level * 20) <> "px") $ H.toHtml entryName
+												H.td $ case entry of
+													ReportEntry_file
+														{ reportEntry_size = entrySize
+														} -> H.toHtml $ locSizeInBytes loc $ toInteger entrySize
+													_ -> mempty
+												H.td $ do
+													let entryMode = reportEntry_mode entry
+													let isDir = case entry of
+														ReportEntry_directory {} -> True
+														_ -> False
+													tag $ toHtml $
+														(if isDir then 'd' else '.') :
+														(if (entryMode .&. 0x100) > 0 then 'r' else '.') :
+														(if (entryMode .&. 0x80) > 0 then 'w' else '.') :
+														(if (entryMode .&. 0x40) > 0 then 'x' else '.') :
+														(if (entryMode .&. 0x20) > 0 then 'r' else '.') :
+														(if (entryMode .&. 0x10) > 0 then 'w' else '.') :
+														(if (entryMode .&. 0x8) > 0 then 'x' else '.') :
+														(if (entryMode .&. 0x4) > 0 then 'r' else '.') :
+														(if (entryMode .&. 0x2) > 0 then 'w' else '.') :
+														(if (entryMode .&. 0x1) > 0 then 'x' else '.') : []
+												H.td $ case entry of
+													ReportEntry_unknown {} -> mempty
+													ReportEntry_file
+														{ reportEntry_parses = entryParses
+														} -> forM_ entryParses $ \case
+														ReportParse_itchToml {} -> tag ".itch.toml"
+														ReportParse_binaryPe {} -> tag "PE"
+														ReportParse_binaryElf {} -> tag "ELF"
+														ReportParse_binaryMachO {} -> tag "Mach-O"
+													ReportEntry_directory {} -> mempty
+													ReportEntry_symlink
+														{ reportEntry_link = entryLink
+														} -> do
+														tag $ H.toHtml $ locSymlink loc
+														H.toHtml entryLink
+											case entry of
+												ReportEntry_directory
+													{ reportEntry_entries = entryEntries
+													} -> printEntries (level + 1) entryEntries
+												_ -> mempty
+									printEntries (0 :: Int) rootEntries
+								_ -> return ()
+						_ -> W.status HT.notFound404
+				Nothing -> W.status HT.notFound404
+		Nothing -> W.status HT.notFound404
+
+getUploadDownloadR :: Word64 -> W.Handler App
+getUploadDownloadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
 	App
 		{ appItchApi = itchApi
 		} <- W.sub

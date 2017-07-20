@@ -32,9 +32,11 @@ data Localization = Localization
 	, locUploads :: !T.Text
 	, locDisplayName :: !T.Text
 	, locFileName :: !T.Text
+	, locAccessMode :: !T.Text
 	, locSize :: !T.Text
 	, locTags :: !T.Text
 	, locSizeInBytes :: !(Integer -> T.Text)
+	, locSymlink :: !T.Text
 	, locNoUserVersion :: !T.Text
 	, locBuildVersion :: !(T.Text -> T.Text -> RichText)
 	, locDoesntUseButler :: !T.Text

@@ -38,6 +38,7 @@ localizationEn = Localization
 	, locUploads = "Uploads"
 	, locDisplayName = "Display name"
 	, locFileName = "File name"
+	, locAccessMode = "Mode"
 	, locSize = "Size"
 	, locTags = "Tags"
 	, locSizeInBytes = \size ->
@@ -45,6 +46,7 @@ localizationEn = Localization
 		else if size < 2 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / 1024 :: Float) "") <> " Kb"
 		else if size < 2 * 1024 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024) :: Float) "") <> " Mb"
 		else T.pack (showFFloat (Just 1) (fromIntegral size / (1024 * 1024 * 1024) :: Float) "") <> " Gb"
+	, locSymlink = "symlink"
 	, locNoUserVersion = "not specified"
 	, locBuildVersion = \buildVersion buildUserVersion -> "version: " <> RichText [RichChunkCode buildVersion] <> ", user version: " <> RichText [RichChunkCode buildUserVersion]
 	, locDoesntUseButler = "doesn't use butler"

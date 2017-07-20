@@ -185,3 +185,7 @@ a
 
 .formreprocess
 	display inline-block
+
+.entries
+	& td
+		font-family monospace
