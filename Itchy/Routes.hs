@@ -435,7 +435,7 @@ getSearchR = W.runHandlerM $ do
 			{ itchGameShort_id = ItchGameId gameId
 			, itchGameShort_title = gameTitle
 			, itchGameShort_cover_url = maybeGameCoverUrl
-			} -> H.a ! A.class_ "game" ! A.href (H.toValue $ showRoute $ GameR gameId) $ do
+			} -> H.a ! A.class_ "game" ! A.href (H.toValue $ showRoute $ GameR gameId) ! A.target "_blank" $ do
 			case maybeGameCoverUrl of
 				Just gameCoverUrl -> H.img ! A.src (H.toValue gameCoverUrl)
 				Nothing -> mempty
