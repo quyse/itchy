@@ -22,8 +22,8 @@ import Itchy.Report.Record
 localizationRu :: Localization
 localizationRu = Localization
 	{ locLanguageName = "Русский"
-	, locHome = "Ковырятель itch.io"
-	, locWelcome = "Ковырятель itch.io говорит вам привет! Попробуйте найти вашу игру, введя несколько ключевых слов, и дождитесь появления отчёта. Внимание: это альфа версия, может показывать странное."
+	, locHome = "Ковырятор itch.io"
+	, locWelcome = "Ковырятор itch.io говорит вам привет! Попробуйте найти вашу игру, введя несколько ключевых слов, и дождитесь появления отчёта Ковырятора. Внимание: это альфа версия, может показывать странное."
 	, locSearch = "Поиск"
 	, locGameByAuthor = \game author -> game <> " от " <> author
 	, locDescription = \desc -> "Описание: " <> desc
