@@ -408,13 +408,16 @@ postInvestigateUploadR (ItchUploadId -> uploadId) = W.runHandlerM $ do
 		{ appItchCache = itchCache
 		, appItchInvestigator = itchInvestigator
 		} <- W.sub
+	showRoute <- W.showRouteSub
 	maybeUpload <- liftIO $ itchCacheGetUpload itchCache uploadId
 	case maybeUpload of
 		Just (ItchUpload
 			{ itchUpload_filename = uploadFileName
+			, itchUpload_game_id = ItchGameId gameId
 			}, _maybeBuild) -> do
 			void $ liftIO $ investigateItchUpload itchInvestigator uploadId uploadFileName True
-			W.status HT.noContent204
+			W.header "Location" (T.encodeUtf8 $ showRoute $ GameR gameId)
+			W.status HT.seeOther303
 		Nothing -> W.status HT.notFound404
 
 postAuthR :: W.Handler App
