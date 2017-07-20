@@ -98,8 +98,10 @@ localizationEn = Localization
 	, locMessageNoBinaries = "No binaries found in this upload. It's totally OK if it's a non-executable package like book, soundtrack or asset pack. Overwise, it's probably some mistake."
 	, locRecordBinariesCoverPlatforms = "Binaries exist for all declared platforms"
 	, locMessageBinariesCoverPlatforms = "Binaries are found for every platform the upload is tagged with."
-	, locRecordBinariesPlatformsMismatch = "Binaries platforms mismatch"
-	, locMessageBinariesPlatformsMismatch = "Binaries platforms mismatch"
+	, locRecordUntaggedBinary = \platform -> "No " <> RichText [RichChunkCode platform] <> " tag"
+	, locMessageUntaggedBinary = \platform -> "There's " <> RichText [RichChunkText platform] <> " executable in the package, but the package is not tagged as " <> RichText [RichChunkCode platform] <> " one. Probably you forgot to tag the package appropriately, or the other way around, put wrong executable in it."
+	, locRecordNoPlatformBinaries = \platform -> "No " <> RichText [RichChunkText platform] <> " binaries"
+	, locMessageNoPlatformBinaries = \platform -> "The package is tagged with " <> RichText [RichChunkCode platform] <> " platform, but there's no " <> RichText [RichChunkText platform] <> " executables. If your game doesn't have native executables, dismiss this message. Otherwise you probably forgot to put the executable, or put the wrong one. Or tagged the package with wrong tag."
 	, locRecordWindowsBinaryX86Exists = "There's 32-bit Windows binary"
 	, locRecordNoWindowsBinaryX86 = "No 32-bit Windows binary"
 	, locMessageAboutWindowsBinaryX86 = "32-bit systems are still exist among players, so it's nice to provide 32-bit build (in which case 64-bit is not really necessary, as 32-bit binaries are perfectly playable on 64-bit Windows)."
@@ -116,7 +118,7 @@ localizationEn = Localization
 	, locRecordOptedIntoPressSystem = "Opted into itch.io press system"
 	, locRecordNotOptedIntoPressSystem = "Not opted into itch.io press system"
 	, locMessageAboutPressSystem = "You can opt your account into " <> RichText [RichChunkLink "https://itch.io/press/user-list" "itch.io's press system"] <> ", this will enable special press account users to find your paid games and download it for free."
-	, locRecordNoUploads = "There're no uploads"
+	, locRecordNoUploads = "There's no uploads"
 	}
 
 plural :: Integral n => n -> a -> a -> a

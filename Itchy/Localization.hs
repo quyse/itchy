@@ -81,8 +81,10 @@ data Localization = Localization
 	, locMessageNoBinaries :: !RichText
 	, locRecordBinariesCoverPlatforms :: !RichText
 	, locMessageBinariesCoverPlatforms :: !RichText
-	, locRecordBinariesPlatformsMismatch :: !RichText
-	, locMessageBinariesPlatformsMismatch :: !RichText
+	, locRecordUntaggedBinary :: !(T.Text -> RichText)
+	, locMessageUntaggedBinary :: !(T.Text -> RichText)
+	, locRecordNoPlatformBinaries :: !(T.Text -> RichText)
+	, locMessageNoPlatformBinaries :: !(T.Text -> RichText)
 	, locRecordWindowsBinaryX86Exists :: !RichText
 	, locRecordNoWindowsBinaryX86 :: !RichText
 	, locMessageAboutWindowsBinaryX86 :: !RichText

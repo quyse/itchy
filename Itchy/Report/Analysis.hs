@@ -138,9 +138,7 @@ analyseUpload loc itchUpload@ItchUpload
 			, recordName = locRecordUnpackNotStarted loc
 			, recordMessage = mempty
 			}]
-		ReportUnpack_succeeded {} ->
-			[ binariesPlatformsCheckRecord
-			]
+		ReportUnpack_succeeded {} -> binariesPlatformsCheckRecords
 		ReportUnpack_failed e -> [Record
 			{ recordScope = scope
 			, recordSeverity = SeverityErr
@@ -154,32 +152,42 @@ analyseUpload loc itchUpload@ItchUpload
 			} -> entries
 		_ -> M.empty
 	-- check for binaries matching platform tags
-	binariesPlatformsCheckRecord =
-		if HS.null binariesPlatforms then Record
+	binariesPlatformsCheckRecords =
+		if HS.null binariesPlatforms && HS.null tagsPlatforms then []
+		else if HS.null binariesPlatforms then [Record
 			{ recordScope = scope
-			, recordSeverity = SeverityInfo
+			, recordSeverity = SeverityWarn
 			, recordName = locRecordNoBinaries loc
 			, recordMessage = locMessageNoBinaries loc
-			}
-		else if HS.map fst binariesPlatforms == tagsPlatforms then Record
+			}]
+		else if binariesOnlyPlatforms == tagsPlatforms then [Record
 			{ recordScope = scope
 			, recordSeverity = SeverityOk
 			, recordName = locRecordBinariesCoverPlatforms loc
 			, recordMessage = locMessageBinariesCoverPlatforms loc
-			}
-		else Record
-			{ recordScope = scope
-			, recordSeverity = SeverityBad
-			, recordName = locRecordBinariesPlatformsMismatch loc
-			, recordMessage = locMessageBinariesPlatformsMismatch loc
-			}
+			}]
+		else concat $ flip map (HS.toList $ HS.union binariesOnlyPlatforms tagsPlatforms) $ \platform@(platformName -> pn) ->
+			case (HS.member platform binariesOnlyPlatforms) `compare` (HS.member platform tagsPlatforms) of
+				EQ -> []
+				LT -> [Record
+					{ recordScope = scope
+					, recordSeverity = SeverityWarn
+					, recordName = locRecordNoPlatformBinaries loc pn
+					, recordMessage = locMessageNoPlatformBinaries loc pn
+					}]
+				GT -> [Record
+					{ recordScope = scope
+					, recordSeverity = SeverityBad
+					, recordName = locRecordUntaggedBinary loc pn
+					, recordMessage = locMessageUntaggedBinary loc pn
+					}]
 	tagsPlatforms = HS.fromList $ concat
 		[ if tagWindows then [PlatformWindows] else []
 		, if tagLinux then [PlatformLinux] else []
 		, if tagMacOS then [PlatformMacOS] else []
 		, if tagAndroid then [PlatformAndroid] else []
 		]
-	binariesPlatforms = foldEntriesPlatforms uploadEntries HS.empty
+	binariesPlatforms@(HS.map fst -> binariesOnlyPlatforms) = foldEntriesPlatforms uploadEntries HS.empty
 	foldEntriesPlatforms entries platforms = foldr foldEntryPlatform platforms $ M.toList entries
 	foldEntryPlatform (_entryName, entry) platforms = case entry of
 		ReportEntry_file
@@ -382,3 +390,10 @@ analyseGame loc ItchGame
 			, recordMessage = mempty
 			}]
 		else []
+
+platformName :: Platform -> T.Text
+platformName = \case
+	PlatformWindows -> "Windows"
+	PlatformLinux -> "Linux"
+	PlatformMacOS -> "MacOS"
+	PlatformAndroid -> "Android"
