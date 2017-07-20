@@ -13,6 +13,7 @@ module Itchy.ItchCache
 	, CachedReport(..)
 	, itchCacheGetReport
 	, itchCachePutReport
+	, itchCacheDeleteReport
 	) where
 
 import Control.Concurrent
@@ -113,6 +114,13 @@ itchCachePut idToKey ItchCache
 	{ itchCacheDb = db
 	} keyId value = lmdbWrite db $ \txn -> do
 	lmdbPut txn (S.encode $ idToKey keyId) (S.encode value)
+	lmdbCommit txn
+
+itchCacheDelete :: (tid -> CacheKey) -> ItchCache -> tid -> IO ()
+itchCacheDelete idToKey ItchCache
+	{ itchCacheDb = db
+	} keyId = lmdbWrite db $ \txn -> do
+	lmdbDelete txn (S.encode $ idToKey keyId)
 	lmdbCommit txn
 
 -- | Get if given unix time is stale.
@@ -231,3 +239,6 @@ itchCacheGetReport = itchCacheGet CacheKeyReport
 
 itchCachePutReport :: ItchCache -> ItchUploadId -> CachedReport -> IO ()
 itchCachePutReport = itchCachePut CacheKeyReport
+
+itchCacheDeleteReport :: ItchCache -> ItchUploadId -> IO ()
+itchCacheDeleteReport = itchCacheDelete CacheKeyReport

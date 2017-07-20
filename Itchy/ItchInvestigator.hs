@@ -117,7 +117,9 @@ investigateItchUpload ItchInvestigator
 			, cachedReport_updated = updated
 			} -> do
 			CTime currentTime <- epochTime
-			if autoRefresh && updated < currentTime - stalePeriod then refresh
+			if autoRefresh && updated < currentTime - stalePeriod then do
+				itchCacheDeleteReport itchCache uploadId
+				refresh
 			else return ItchInvestigation
 				{ itchInvestigationMaybeReport = maybeReport
 				, itchInvestigationTime = updated
