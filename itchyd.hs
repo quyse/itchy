@@ -88,7 +88,7 @@ run Options
 	itchInvestigator <- book bk $ newItchInvestigator itchCache itchApiKey investigatorThreadsCount investigationStalePeriod
 
 	logger <- W.mkRequestLogger $ W.def
-		{ W.outputFormat = W.Detailed True
+		{ W.outputFormat = W.Apache W.FromFallback
 		, W.autoFlush = False
 		}
 	Warp.runSettings
