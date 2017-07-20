@@ -23,7 +23,7 @@ localizationEn :: Localization
 localizationEn = Localization
 	{ locLanguageName = "English"
 	, locHome = "itch.io Sanity Checker"
-	, locWelcome = "Welcome to itch.io Sanity Checker. Try to search for your game by entering a few keywords, and wait for a report. Beware: it's alpha software, results may be weird."
+	, locWelcome = "Welcome to itch.io Sanity Checker. Try to search for your game by entering a few keywords, and wait for a report. Beware: it's alpha software, results may be weird. This service is unofficial and is not affiliated with itch.io."
 	, locSearch = "Search"
 	, locGameByAuthor = \game author -> game <> " by " <> author
 	, locDescription = \desc -> "Description: " <> desc
