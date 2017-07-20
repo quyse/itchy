@@ -23,7 +23,7 @@ localizationRu :: Localization
 localizationRu = Localization
 	{ locLanguageName = "Русский"
 	, locHome = "Ковырятор itch.io"
-	, locWelcome = "Ковырятор itch.io говорит вам привет! Попробуйте найти вашу игру, введя несколько ключевых слов, и дождитесь появления отчёта Ковырятора. Внимание: это альфа версия, может показывать странное. Данный сервис неофициальный, и никак не аффилирован с itch.io."
+	, locWelcome = "Ковырятор itch.io говорит вам привет! Попробуйте найти вашу игру, введя несколько ключевых слов, дождитесь завершения ковыряционного анализа, и порадуйтесь отчёту. Внимание: это альфа версия, может показывать странное. Данный сервис неофициальный, и никак не аффилирован с itch.io."
 	, locSearch = "Поиск"
 	, locGameByAuthor = \game author -> game <> " от " <> author
 	, locDescription = \desc -> "Описание: " <> desc
@@ -41,6 +41,7 @@ localizationRu = Localization
 	, locAccessMode = "Доступ"
 	, locSize = "Размер"
 	, locTags = "Теги"
+	, locReportStatus = "Чё там с отчётом"
 	, locSizeInBytes = \size ->
 		if size < 2 * 1024 then T.pack (show size) <> " б"
 		else if size < 2 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / 1024 :: Float) "") <> " Кб"
@@ -50,10 +51,10 @@ localizationRu = Localization
 	, locNoUserVersion = "не указана"
 	, locBuildVersion = \buildVersion buildUserVersion -> "версия: " <> RichText [RichChunkCode buildVersion] <> ", пользовательская версия: " <> RichText [RichChunkCode buildUserVersion]
 	, locDoesntUseButler = "не использует butler"
-	, locInvestigationStarted = "ставим в очередь"
-	, locInvestigationQueued = \n -> T.pack ("номер " ++ shows n " в очереди")
-	, locInvestigationProcessing = "обрабатывается"
-	, locInvestigationSucceeded = "готов"
+	, locInvestigationStarted = "ставим в очередь..."
+	, locInvestigationQueued = \n -> T.pack ("номер " ++ shows n " в очереди...")
+	, locInvestigationProcessing = "обрабатывается..."
+	, locInvestigationSucceeded = "отчёт готов"
 	, locInvestigationFailed = "ошибка"
 	, locReinvestigate = "Обработать ещё раз"
 	, locReport = "Отчёт"

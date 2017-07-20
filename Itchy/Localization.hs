@@ -35,6 +35,7 @@ data Localization = Localization
 	, locAccessMode :: !T.Text
 	, locSize :: !T.Text
 	, locTags :: !T.Text
+	, locReportStatus :: !T.Text
 	, locSizeInBytes :: !(Integer -> T.Text)
 	, locSymlink :: !T.Text
 	, locNoUserVersion :: !T.Text

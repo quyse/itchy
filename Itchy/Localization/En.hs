@@ -41,6 +41,7 @@ localizationEn = Localization
 	, locAccessMode = "Mode"
 	, locSize = "Size"
 	, locTags = "Tags"
+	, locReportStatus = "Report status"
 	, locSizeInBytes = \size ->
 		if size < 2 * 1024 then T.pack (show size) <> " b"
 		else if size < 2 * 1024 * 1024 then T.pack (showFFloat (Just 1) (fromIntegral size / 1024 :: Float) "") <> " Kb"
@@ -50,10 +51,10 @@ localizationEn = Localization
 	, locNoUserVersion = "not specified"
 	, locBuildVersion = \buildVersion buildUserVersion -> "version: " <> RichText [RichChunkCode buildVersion] <> ", user version: " <> RichText [RichChunkCode buildUserVersion]
 	, locDoesntUseButler = "doesn't use butler"
-	, locInvestigationStarted = "enqueuing"
-	, locInvestigationQueued = \n -> T.pack ('#' : shows n " in queue")
-	, locInvestigationProcessing = "processing"
-	, locInvestigationSucceeded = "ready"
+	, locInvestigationStarted = "enqueuing..."
+	, locInvestigationQueued = \n -> T.pack ('#' : shows n " in queue...")
+	, locInvestigationProcessing = "processing..."
+	, locInvestigationSucceeded = "report is ready"
 	, locInvestigationFailed = "failed"
 	, locReinvestigate = "Reprocess"
 	, locReport = "Report"

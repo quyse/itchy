@@ -164,7 +164,7 @@ getGameR gameId = W.runHandlerM $ do
 						th $ toHtml $ locSize loc
 						th $ toHtml $ locTags loc
 						th "Butler"
-						th $ toHtml $ locReport loc
+						th $ toHtml $ locReportStatus loc
 					forM_ (V.zip gameUploads investigations) $ \((ItchUpload
 						{ itchUpload_id = ItchUploadId uploadId
 						, itchUpload_display_name = fromMaybe "" -> uploadDisplayName
