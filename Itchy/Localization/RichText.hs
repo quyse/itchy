@@ -3,7 +3,7 @@ Module: Itchy.Localization.RichText
 Description: RichText
 -}
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, LambdaCase #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, LambdaCase, OverloadedStrings #-}
 
 module Itchy.Localization.RichText
 	( RichText(..)
@@ -36,5 +36,5 @@ instance IsString RichChunk where
 instance TB.ToMarkup RichChunk where
 	toMarkup = \case
 		RichChunkText t -> H.toHtml t
-		RichChunkLink l t -> H.a H.! A.href (H.toValue l) $ H.toHtml t
+		RichChunkLink l t -> H.a H.! A.href (H.toValue l) H.! A.target "_blank" $ H.toHtml t
 		RichChunkCode t -> H.code $ H.toHtml t

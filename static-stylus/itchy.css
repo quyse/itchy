@@ -40,6 +40,7 @@ code
 				height 32px
 
 .footer
+	margin-top 50px
 	& > .localizations
 		text-align center
 		& > a
@@ -149,6 +150,14 @@ a
 	&.rollup
 		text-decoration none
 		border-bottom 1px dashed #00f
+	&[target=_blank]::after
+		content "↗"
+		opacity 0.5
+		text-decoration none
+	&.game
+		text-decoration none
+		&[target=_blank]::after
+			visibility hidden
 .file
 	font-family monospace
 	white-space pre

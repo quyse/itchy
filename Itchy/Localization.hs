@@ -23,6 +23,7 @@ data Localization = Localization
 	, locGoToGameByUrl :: !T.Text
 	, locGo :: !T.Text
 	, locGameByAuthor :: !(T.Text -> T.Text -> T.Text)
+	, locLink :: !(T.Text -> RichText)
 	, locDescription :: !(T.Text -> T.Text)
 	, locPlatforms :: !T.Text
 	, locHasDemo :: !T.Text

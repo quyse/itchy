@@ -29,6 +29,7 @@ localizationEn = Localization
 	, locGoToGameByUrl = "Go to game by url:"
 	, locGo = "Go"
 	, locGameByAuthor = \game author -> game <> " by " <> author
+	, locLink = \url -> "Link: " <> RichText [RichChunkLink url url]
 	, locDescription = \desc -> "Description: " <> desc
 	, locPlatforms = "Platforms"
 	, locHasDemo = "Has demo"

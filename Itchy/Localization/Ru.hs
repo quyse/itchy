@@ -29,6 +29,7 @@ localizationRu = Localization
 	, locGoToGameByUrl = "Переход к игре по URL:"
 	, locGo = "Перейти"
 	, locGameByAuthor = \game author -> game <> " от " <> author
+	, locLink = \url -> "Ссылка: " <> RichText [RichChunkLink url url]
 	, locDescription = \desc -> "Описание: " <> desc
 	, locPlatforms = "Платформы"
 	, locHasDemo = "Есть демо"

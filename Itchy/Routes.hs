@@ -117,6 +117,7 @@ getGameR gameId = W.runHandlerM $ do
 	case maybeGameWithUploads of
 		Just (game@ItchGame
 			{ itchGame_title = gameTitle
+			, itchGame_url = gameUrl
 			, itchGame_cover_url = maybeGameCoverUrl
 			, itchGame_user = ItchUser
 				{ itchUser_username = creatorUserName
@@ -151,6 +152,7 @@ getGameR gameId = W.runHandlerM $ do
 				case maybeGameCoverUrl of
 					Just coverUrl -> img ! A.class_ "cover" ! A.src (toValue coverUrl)
 					Nothing -> mempty
+				H.p $ H.toHtml $ locLink loc gameUrl
 				p $ toHtml $ locDescription loc gameShortText
 				p $ toHtml (locPlatforms loc) <> ": "
 					<> (if gameWindows then H.span ! A.class_ "tag" $ "windows" else mempty)
