@@ -57,6 +57,9 @@ handleReport h io = io `catches`
 	, Handler $ \(SomeException e) -> reportError $ h $ T.pack $ show e
 	]
 
+ignoreErrors :: IO () -> IO ()
+ignoreErrors = handle $ \SomeException {} -> return ()
+
 data ReportedError = ReportedError deriving Show
 instance Exception ReportedError
 
@@ -203,7 +206,7 @@ run Options
 	handleReport (\e r -> r
 		{ report_unpack = ReportUnpack_failed e
 		}) $ do
-		P.callProcess "unar" ["-q", "-o", unpackPath, uploadFileName]
+		P.callProcess "unar" ["-q", "-s", "-D", "-o", unpackPath, uploadFileName]
 
 		-- parse entries
 		let
@@ -252,7 +255,7 @@ parseFile name path mime = do
 	let addParse parse = modifyIORef' parsesRef (parse :)
 
 	-- ELF (Linux)
-	when (mime == "application/x-executable" || mime == "application/x-sharedlib") $ do
+	when (mime == "application/x-executable" || mime == "application/x-sharedlib") $ ignoreErrors $ do
 		-- get some info from ELF header
 		elfHeader <- withFile (T.unpack path) ReadMode $ \h -> B.hGet h 0x14
 		let arch = either (const ReportArch_unknown) id $ flip S.runGet elfHeader $ do
@@ -312,7 +315,7 @@ parseFile name path mime = do
 			}
 
 	-- EXE (Windows)
-	when (mime == "application/x-dosexec") $ do
+	when (mime == "application/x-dosexec") $ ignoreErrors $ do
 		-- get file format
 		objdumpOutput <- T.pack <$> P.readProcess "objdump" ["-a", T.unpack path] ""
 		let foldBinary binary line = case reverse $ T.words line of
@@ -357,7 +360,7 @@ parseFile name path mime = do
 			} $ T.lines objdumpOutput
 
 	-- Mach-O (macOS)
-	when (mime == "application/x-mach-binary") $ do
+	when (mime == "application/x-mach-binary") $ ignoreErrors $ do
 		-- get list of subbinaries and their dependencies
 		otoolOutput <- T.pack <$> P.readProcess "otool" ["-hvL", T.unpack path] ""
 		let foldSubbinary subbinaries line = case line of
