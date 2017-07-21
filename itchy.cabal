@@ -50,6 +50,7 @@ executable itchyd
     , mime-types
     , optparse-applicative
     , process
+    , scientific
     , stm
     , template-haskell
     , text
@@ -85,6 +86,7 @@ executable itchy-runner
     , magic
     , optparse-applicative
     , process
+    , scientific
     , unix
     , unordered-containers
     , vector
