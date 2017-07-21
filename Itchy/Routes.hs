@@ -28,7 +28,8 @@ import Data.Word
 import Foreign.C.Types
 import qualified Network.HTTP.Types as HT
 import System.Posix.Time
-import Text.Blaze.Html5 as H
+import qualified Text.Blaze.Html5 as H
+import Text.Blaze.Html5((!))
 import qualified Text.Blaze.Html5.Attributes as A
 import qualified Text.Blaze.Html.Renderer.Text as H(renderHtml)
 import qualified Wai.Routes as W
@@ -150,31 +151,31 @@ getGameR gameId = W.runHandlerM $ do
 			let reinvestigateTimeCutoff = currentTime - investigationStalePeriod
 			page gameByAuthor [(locHome loc, HomeR), (gameByAuthor, GameR gameId)] $ H.div ! A.class_ "game_info" $ do
 				case maybeGameCoverUrl of
-					Just coverUrl -> img ! A.class_ "cover" ! A.src (toValue coverUrl)
+					Just coverUrl -> H.img ! A.class_ "cover" ! A.src (H.toValue coverUrl)
 					Nothing -> mempty
 				H.p $ H.toHtml $ locLink loc gameUrl
-				p $ toHtml $ locDescription loc gameShortText
-				p $ toHtml (locPlatforms loc) <> ": "
+				H.p $ H.toHtml $ locDescription loc gameShortText
+				H.p $ H.toHtml (locPlatforms loc) <> ": "
 					<> (if gameWindows then H.span ! A.class_ "tag" $ "windows" else mempty)
 					<> (if gameLinux then H.span ! A.class_ "tag" $ "linux" else mempty)
 					<> (if gameMacOS then H.span ! A.class_ "tag" $ "macos" else mempty)
 					<> (if gameAndroid then H.span ! A.class_ "tag" $ "android" else mempty)
-				p $ toHtml $ if gameHasDemo then locHasDemo loc else locNoDemo loc
-				p $ toHtml $
+				H.p $ H.toHtml $ if gameHasDemo then locHasDemo loc else locNoDemo loc
+				H.p $ H.toHtml $
 					if gameCanBeBought then
 						if gameMinPrice <= 0 then locFreeDonationsAllowed loc
 						else locMinimumPrice loc <> ": $" <> T.pack (show gameMinPrice)
 					else locFreePaymentsDisabled loc
-				p $ toHtml $ if gameInPressSystem then locOptedInPressSystem loc else locNotOptedInPressSystem loc
-				h2 $ toHtml $ locUploads loc
-				table $ do
-					tr $ do
-						th $ toHtml $ locDisplayName loc
-						th $ toHtml $ locFileName loc
-						th $ toHtml $ locSize loc
-						th $ toHtml $ locTags loc
-						th "Butler"
-						th $ toHtml $ locReportStatus loc
+				H.p $ H.toHtml $ if gameInPressSystem then locOptedInPressSystem loc else locNotOptedInPressSystem loc
+				H.h2 $ H.toHtml $ locUploads loc
+				H.table $ do
+					H.tr $ do
+						H.th $ H.toHtml $ locDisplayName loc
+						H.th $ H.toHtml $ locFileName loc
+						H.th $ H.toHtml $ locSize loc
+						H.th $ H.toHtml $ locTags loc
+						H.th "Butler"
+						H.th $ H.toHtml $ locReportStatus loc
 					forM_ (V.zip gameUploads investigations) $ \((ItchUpload
 						{ itchUpload_id = ItchUploadId uploadId
 						, itchUpload_display_name = fromMaybe "" -> uploadDisplayName
@@ -187,9 +188,9 @@ getGameR gameId = W.runHandlerM $ do
 						, itchUpload_p_osx = uploadMacOS
 						, itchUpload_p_android = uploadAndroid
 						}, maybeBuild), investigation) -> H.tr ! A.class_ "upload" $ do
-						H.td ! A.class_ "name" $ toHtml uploadDisplayName
-						H.td ! A.class_ "filename" $ {- a ! A.href (toValue $ showRoute $ UploadR uploadId) $ -} toHtml uploadFileName
-						H.td $ toHtml $ locSizeInBytes loc uploadSize
+						H.td ! A.class_ "name" $ H.toHtml uploadDisplayName
+						H.td ! A.class_ "filename" $ {- a ! A.href (H.toValue $ showRoute $ UploadR uploadId) $ -} H.toHtml uploadFileName
+						H.td $ H.toHtml $ locSizeInBytes loc uploadSize
 						H.td $ do
 							if uploadWindows then H.span ! A.class_ "tag" $ "windows" else mempty
 							if uploadLinux then H.span ! A.class_ "tag" $ "linux" else mempty
@@ -214,9 +215,9 @@ getGameR gameId = W.runHandlerM $ do
 								if isJust maybeReport
 									then H.a ! A.href (H.toValue $ showRoute $ UploadR uploadId) ! A.target "_blank" $ H.toHtml $ locInvestigationSucceeded loc
 									else H.toHtml $ locInvestigationFailed loc
-								when (t < reinvestigateTimeCutoff) $ H.form ! A.class_ "formreprocess" ! A.action (toValue $ showRoute $ InvestigateUploadR uploadId) ! A.method "POST" $
-									H.input ! A.type_ "submit" ! A.value (toValue $ locReinvestigate loc)
-				h2 $ toHtml $ locReport loc
+								when (t < reinvestigateTimeCutoff) $ H.form ! A.class_ "formreprocess" ! A.action (H.toValue $ showRoute $ InvestigateUploadR uploadId) ! A.method "POST" $
+									H.input ! A.type_ "submit" ! A.value (H.toValue $ locReinvestigate loc)
+				H.h2 $ H.toHtml $ locReport loc
 				let
 					reportsCount = foldr (\investigation !c -> case investigation of
 						ItchInvestigation {} -> c + 1
@@ -259,10 +260,10 @@ getGameR gameId = W.runHandlerM $ do
 
 				H.table $ do
 					H.tr $ do
-						H.th $ toHtml $ locRecordSeverity loc
-						H.th ! A.class_ "scope" $ toHtml $ locRecordScope loc
-						H.th ! A.class_ "name" $ toHtml $ locRecordName loc
-						H.th ! A.class_ "name" $ toHtml $ locRecordMessage loc
+						H.th $ H.toHtml $ locRecordSeverity loc
+						H.th ! A.class_ "scope" $ H.toHtml $ locRecordScope loc
+						H.th ! A.class_ "name" $ H.toHtml $ locRecordName loc
+						H.th ! A.class_ "name" $ H.toHtml $ locRecordMessage loc
 					forM_ records $ \Record
 						{ recordScope = scope
 						, recordSeverity = severity
@@ -277,15 +278,15 @@ getGameR gameId = W.runHandlerM $ do
 							SeverityBad -> ("bad", locSeverityBad loc)
 							SeverityErr -> ("err", locSeverityErr loc)
 						in H.tr ! A.class_ cls $ do
-							H.td ! A.class_ "status" $ H.div $ toHtml ttl
-							H.td $ toHtml $ case scope of
+							H.td ! A.class_ "status" $ H.div $ H.toHtml ttl
+							H.td $ H.toHtml $ case scope of
 								ProjectScope -> locScopeProject loc
 								UploadGroupScope uploadGroup -> locScopeUploadGroup loc uploadGroup
 								UploadScope uploadId -> locScopeUpload loc (uploadName uploadId)
 								EntryScope uploadId entryPath -> locScopeEntry loc (uploadName uploadId) (T.intercalate "/" entryPath)
-							H.td $ H.div ! A.class_ "record" $ toHtml name
+							H.td $ H.div ! A.class_ "record" $ H.toHtml name
 							H.td $ unless (message == RichText []) $
-								H.div ! A.class_ "message" $ toHtml message
+								H.div ! A.class_ "message" $ H.toHtml message
 		Nothing -> do
 			let gameByAuthor = locUnknownGame loc
 			W.header "Refresh" "3"
@@ -349,7 +350,7 @@ getUploadR uploadId = W.runHandlerM $ do
 													let isDir = case entry of
 														ReportEntry_directory {} -> True
 														_ -> False
-													tag $ toHtml $
+													tag $ H.toHtml $
 														(if isDir then 'd' else '.') :
 														(if (entryMode .&. 0x100) > 0 then 'r' else '.') :
 														(if (entryMode .&. 0x80) > 0 then 'w' else '.') :
@@ -503,20 +504,20 @@ page titleText pieces bodyHtml = do
 		Just (BA.convertFromBase BA.Base64URLUnpadded . T.encodeUtf8 -> Right (S.decode -> Right user)) -> Just user
 		_ -> Nothing
 	showRoute <- W.showRouteSub
-	W.html $ TL.toStrict $ H.renderHtml $ docTypeHtml $ do
+	W.html $ TL.toStrict $ H.renderHtml $ H.docTypeHtml $ do
 		H.head $ do
-			meta ! A.charset "utf-8"
-			meta ! A.name "robots" ! A.content "index,follow"
-			link ! A.rel "stylesheet" ! A.href [staticPath|static-stylus/itchy.css|]
-			link ! A.rel "icon" ! A.type_ "image/png" ! A.href [staticPath|static/itchio.svg|]
-			script ! A.src [staticPath|static/jquery-2.1.4.min.js|] $ mempty
-			script ! A.src [staticPath|static-js/itchy.js|] $ mempty
-			H.title $ toHtml $ titleText <> " - " <> "itch.io Developer's Sanity Keeper"
-		body $ do
+			H.meta ! A.charset "utf-8"
+			H.meta ! A.name "robots" ! A.content "index,follow"
+			H.link ! A.rel "stylesheet" ! A.href [staticPath|static-stylus/itchy.css|]
+			H.link ! A.rel "icon" ! A.type_ "image/png" ! A.href [staticPath|static/itchio.svg|]
+			H.script ! A.src [staticPath|static/jquery-2.1.4.min.js|] $ mempty
+			H.script ! A.src [staticPath|static-js/itchy.js|] $ mempty
+			H.title $ H.toHtml $ titleText <> " - " <> "itch.io Developer's Sanity Keeper"
+		H.body $ do
 			H.div ! A.class_ "header" $ do
 				H.div ! A.class_ "pieces" $ forM_ pieces $ \(pieceName, pieceRoute) -> do
 					void "/ "
-					a ! A.href (toValue $ showRoute pieceRoute) $ toHtml pieceName
+					H.a ! A.href (H.toValue $ showRoute pieceRoute) $ H.toHtml pieceName
 					void " "
 				case maybeUser of
 					Just ItchUser
@@ -524,14 +525,14 @@ page titleText pieces bodyHtml = do
 						, itchUser_url = userUrl
 						, itchUser_cover_url = userMaybeCoverUrl
 						} -> H.div ! A.class_ "user" $ do
-						a ! A.href (toValue userUrl) $ do
+						H.a ! A.href (H.toValue userUrl) $ do
 							case userMaybeCoverUrl of
-								Just userCoverUrl -> img ! A.src (toValue userCoverUrl)
+								Just userCoverUrl -> H.img ! A.src (H.toValue userCoverUrl)
 								Nothing -> mempty
-							toHtml userName
+							H.toHtml userName
 					Nothing -> mempty
-			h1 $ toHtml titleText
+			H.h1 $ H.toHtml titleText
 			bodyHtml
 			H.div ! A.class_ "footer" $
 				H.div ! A.class_ "localizations" $ forM_ localizations $ \(locale, localization) ->
-					H.a ! A.href ("?locale=" <> toValue locale) $ toHtml $ locLanguageName localization
+					H.a ! A.href ("?locale=" <> H.toValue locale) $ H.toHtml $ locLanguageName localization
