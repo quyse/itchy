@@ -534,6 +534,8 @@ page titleText pieces bodyHtml = do
 					Nothing -> mempty
 			H.h1 $ H.toHtml titleText
 			bodyHtml
-			H.div ! A.class_ "footer" $
-				H.div ! A.class_ "localizations" $ forM_ localizations $ \(locale, localization) ->
+			H.div ! A.class_ "footer" $ do
+				H.span ! A.class_ "localizations" $ forM_ localizations $ \(locale, localization) ->
 					H.a ! A.href ("?locale=" <> H.toValue locale) $ H.toHtml $ locLanguageName localization
+				H.span " | "
+				H.a ! A.href "https://github.com/quyse/itchy" ! A.target "_blank" $ "Github"
