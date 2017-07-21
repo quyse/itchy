@@ -137,8 +137,10 @@ itchGetBuild api (ItchUploadId uploadId) (ItchBuildId buildId) maybeDownloadKeyI
 			} -> return $ Left errors
 		_ -> return $ Left V.empty
 
-itchSearchGame :: ItchApi -> T.Text -> IO (V.Vector ItchGameShort)
-itchSearchGame api query = itchGamesShortResponse_games <$> itchRequest api "/search/games" [("query", Just (T.encodeUtf8 query))]
+itchSearchGame :: ItchApi -> T.Text -> IO (Either (V.Vector T.Text) (V.Vector ItchGameShort))
+itchSearchGame api query = do
+	responseValue <- itchRequest api "/search/games" [("query", Just (T.encodeUtf8 query))]
+	return $ itchParseArrayResponse "games" responseValue
 
 itchParseArrayResponse :: A.FromJSON a => T.Text -> A.Value -> Either (V.Vector T.Text) (V.Vector a)
 itchParseArrayResponse fieldName = \case
@@ -182,14 +184,6 @@ data ItchGameResponse = ItchGameResponse
 instance A.FromJSON ItchGameResponse where
 	parseJSON = A.genericParseJSON A.defaultOptions
 		{ A.fieldLabelModifier = drop 17
-		}
-
-data ItchGamesShortResponse = ItchGamesShortResponse
-	{ itchGamesShortResponse_games :: !(V.Vector ItchGameShort)
-	} deriving (Generic, Show)
-instance A.FromJSON ItchGamesShortResponse where
-	parseJSON = A.genericParseJSON A.defaultOptions
-		{ A.fieldLabelModifier = drop 23
 		}
 
 data ItchBuildResponse = ItchBuildResponse

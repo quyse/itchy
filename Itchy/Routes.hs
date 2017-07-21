@@ -449,7 +449,7 @@ getSearchR = W.runHandlerM $ do
 	showRoute <- W.showRouteSub
 	loc <- getLocalization
 	searchText <- fromMaybe "" <$> W.getParam "s"
-	games <- if T.null searchText then return V.empty else liftIO $ itchSearchGame itchApi searchText
+	Right games <- if T.null searchText then return $ Right V.empty else liftIO $ itchSearchGame itchApi searchText
 	page (locSearch loc) [(locHome loc, HomeR), (locSearch loc, SearchR)] $ do
 		H.form ! A.method "GET" ! A.action (H.toValue $ showRoute SearchR) $ do
 			H.input ! A.type_ "text" ! A.name "s" ! A.value (H.toValue searchText)
