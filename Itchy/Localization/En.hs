@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Localization.En
 Description: English localization.
+License: MIT
 -}
 
 {-# LANGUAGE LambdaCase, OverloadedStrings, ViewPatterns #-}

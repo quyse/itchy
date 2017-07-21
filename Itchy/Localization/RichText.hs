@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Localization.RichText
 Description: RichText
+License: MIT
 -}
 
 {-# LANGUAGE GeneralizedNewtypeDeriving, LambdaCase, OverloadedStrings #-}

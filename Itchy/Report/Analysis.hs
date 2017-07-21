@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Report.Analysis
 Description: Report analysis structures.
+License: MIT
 -}
 
 {-# LANGUAGE DeriveGeneric, LambdaCase, OverloadedStrings, PatternSynonyms, ViewPatterns #-}

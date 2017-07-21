@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Localization.Ru
 Description: Russian localization.
+License: MIT
 -}
 
 {-# LANGUAGE LambdaCase, OverloadedStrings, ViewPatterns #-}

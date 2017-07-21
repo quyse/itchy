@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Report
 Description: Report structures.
+License: MIT
 -}
 
 {-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving, OverloadedStrings #-}

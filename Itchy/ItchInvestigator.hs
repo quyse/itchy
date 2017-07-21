@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.ItchInvestigator
 Description: Makes reports about itch uploads.
+License: MIT
 -}
 
 module Itchy.ItchInvestigator

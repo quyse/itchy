@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Static
 Description: Embedded static files.
+License: MIT
 -}
 
 {-# LANGUAGE OverloadedStrings, TemplateHaskell #-}

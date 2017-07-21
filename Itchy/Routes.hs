@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Routes
 Description: Web app routes
+License: MIT
 -}
 
 {-# LANGUAGE BangPatterns, LambdaCase, MultiParamTypeClasses, OverloadedLists, OverloadedStrings, QuasiQuotes, RankNTypes, TemplateHaskell, TypeFamilies, ViewPatterns #-}

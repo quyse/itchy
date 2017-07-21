@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Localization
 Description: Localization
+License: MIT
 -}
 
 module Itchy.Localization

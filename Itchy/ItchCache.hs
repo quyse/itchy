@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.ItchCache
 Description: Cache for itch data
+License: MIT
 -}
 
 {-# LANGUAGE DeriveGeneric, LambdaCase, ViewPatterns #-}

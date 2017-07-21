@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Itch
 Description: Itch API
+License: MIT
 -}
 
 {-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving, LambdaCase, OverloadedStrings, ViewPatterns #-}

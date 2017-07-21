@@ -1,6 +1,7 @@
 {-|
 Module: Itchy.Report.Record
 Description: Report records.
+License: MIT
 -}
 
 module Itchy.Report.Record
