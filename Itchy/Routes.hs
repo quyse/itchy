@@ -82,6 +82,7 @@ W.mkRoute "App" [W.parseRoutes|
 /investigateUpload/#Word64 InvestigateUploadR POST
 /auth AuthR POST
 /search SearchR GET
+/gamebyurl GameByUrlR GET
 |]
 
 getHomeR :: W.Handler App
@@ -91,8 +92,15 @@ getHomeR = W.runHandlerM $ do
 	page (locHome loc) [(locHome loc, HomeR)] $ do
 		H.p $ H.toHtml $ locWelcome loc
 		H.form ! A.method "GET" ! A.action (H.toValue $ showRoute SearchR) $ do
-			H.input ! A.type_ "text" ! A.name "s"
+			H.label ! A.type_ "text" ! A.for "searchtext" $ H.toHtml $ locSearchGameByName loc
+			H.br
+			H.input ! A.type_ "text" ! A.id "searchtext" ! A.name "s"
 			H.input ! A.type_ "submit" ! A.value (H.toValue $ locSearch loc)
+		H.form ! A.method "GET" ! A.action (H.toValue $ showRoute GameByUrlR) $ do
+			H.label ! A.type_ "text" ! A.for "urltext" $ H.toHtml $ locGoToGameByUrl loc
+			H.br
+			H.input ! A.type_ "text" ! A.id "urltext" ! A.name "url" ! A.placeholder "[https://]creator[.itch.io]/game[/]"
+			H.input ! A.type_ "submit" ! A.value (H.toValue $ locGo loc)
 
 getGameR :: Word64 -> W.Handler App
 getGameR gameId = W.runHandlerM $ do
@@ -464,7 +472,28 @@ getSearchR = W.runHandlerM $ do
 				Nothing -> mempty
 			H.span $ H.toHtml gameTitle
 
-page :: W.RenderRoute master => T.Text -> [(T.Text, W.Route App)] -> Html -> W.HandlerM App master ()
+getGameByUrlR :: W.Handler App
+getGameByUrlR = W.runHandlerM $ do
+	App
+		{ appItchApi = itchApi
+		} <- W.sub
+	showRoute <- W.showRouteSub
+	searchText <- fromMaybe "" <$> W.getParam "url"
+	-- strip various stuff, and parse
+	let
+		pref p s = fromMaybe s $ T.stripPrefix p s
+		suf q s = fromMaybe s $ T.stripSuffix q s
+	case T.splitOn "/" $ T.replace ".itch.io/" "/" $ suf "/" $ pref "https://" $ pref "http://" $ searchText of
+		[creator, game] -> do
+			maybeGameId <- liftIO $ itchGameGetByUrl itchApi creator game
+			case maybeGameId of
+				Just (ItchGameId gameId) -> do
+					W.header "Location" $ T.encodeUtf8 $ showRoute $ GameR gameId
+					W.status HT.seeOther303
+				Nothing -> W.status HT.notFound404
+		_ -> W.status HT.notFound404
+
+page :: W.RenderRoute master => T.Text -> [(T.Text, W.Route App)] -> H.Html -> W.HandlerM App master ()
 page titleText pieces bodyHtml = do
 	W.header HT.hCacheControl "public, max-age=1"
 	maybeUserCookie <- W.getCookie "user"

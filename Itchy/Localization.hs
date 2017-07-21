@@ -18,7 +18,10 @@ data Localization = Localization
 	{ locLanguageName :: !T.Text
 	, locHome :: !T.Text
 	, locWelcome :: !T.Text
+	, locSearchGameByName :: !T.Text
 	, locSearch :: !T.Text
+	, locGoToGameByUrl :: !T.Text
+	, locGo :: !T.Text
 	, locGameByAuthor :: !(T.Text -> T.Text -> T.Text)
 	, locDescription :: !(T.Text -> T.Text)
 	, locPlatforms :: !T.Text

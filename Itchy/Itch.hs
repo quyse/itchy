@@ -16,6 +16,7 @@ module Itchy.Itch
 	, itchGetUploadBuilds
 	, itchGetBuild
 	, itchSearchGame
+	, itchGameGetByUrl
 	, ItchUserId(..)
 	, ItchUser(..)
 	, ItchGameId(..)
@@ -36,6 +37,7 @@ import qualified Data.HashMap.Lazy as HM
 import Data.Monoid
 import qualified Data.Serialize as S
 import Data.Serialize.Text()
+import Data.Scientific(toBoundedInteger)
 import Data.String
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -141,6 +143,21 @@ itchSearchGame :: ItchApi -> T.Text -> IO (Either (V.Vector T.Text) (V.Vector It
 itchSearchGame api query = do
 	responseValue <- itchRequest api "/search/games" [("query", Just (T.encodeUtf8 query))]
 	return $ itchParseArrayResponse "games" responseValue
+
+itchGameGetByUrl :: ItchApi -> T.Text -> T.Text -> IO (Maybe ItchGameId)
+itchGameGetByUrl ItchApi
+	{ itchHttpManager = httpManager
+	} creator game = do
+	response <- H.httpLbs H.defaultRequest
+		{ H.method = "GET"
+		, H.secure = True
+		, H.host = T.encodeUtf8 $ creator <> ".itch.io"
+		, H.port = 443
+		, H.path = "/" <> T.encodeUtf8 game <> "/data.json"
+		} httpManager
+	return $ case A.eitherDecode' (H.responseBody response) of
+		Right (A.Object (HM.lookup "id" -> Just (A.Number (toBoundedInteger -> Just gameId)))) -> Just $ ItchGameId gameId
+		_ -> Nothing
 
 itchParseArrayResponse :: A.FromJSON a => T.Text -> A.Value -> Either (V.Vector T.Text) (V.Vector a)
 itchParseArrayResponse fieldName = \case
