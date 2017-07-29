@@ -100,6 +100,8 @@ localizationRu = Localization
 		, " для которой в свою очередь требуется дистрибутив не ниже ", RichChunkCode distroName
 		, " (содержащий ", RichChunkCode depName, " ", RichChunkCode distroVersion, ")."
 		]
+	, locRecordUnsafeCharsFileName = "Небезопасные символы в имени файла"
+	, locMessageUnsafeCharsFileName = \fileName -> "Имя файла \"" <> RichText [RichChunkCode fileName] <> "\" содержит символы, которые могут вызвать проблемы с различными программами/операционными системами в зависимости от текущей локали и других факторов. Рекомендуется не использовать: не-ASCII символы, управляющие символы ASCII, и эти: " <> RichText [RichChunkCode "\\/:*?\"<>|"] <> "."
 	, locRecordNoBinaries = "Бинарники не найдены"
 	, locMessageNoBinaries = "В данном пакете не найдено ни одного исполняемого файла. Это нормально для неисполняемого пакета, такого как книга, саундтрек, пак ассетов. В противном случае это, вероятно, ошибка."
 	, locRecordBinariesCoverPlatforms = "Есть бинарники для всех указанных платформ"

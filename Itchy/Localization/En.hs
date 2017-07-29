@@ -100,6 +100,8 @@ localizationEn = Localization
 		, " which in turn requires at least ", RichChunkCode distroName
 		, " (containing ", RichChunkCode depName, " ", RichChunkCode depInDistroVersion, ")."
 		]
+	, locRecordUnsafeCharsFileName = "Unsafe characters in file name"
+	, locMessageUnsafeCharsFileName = \fileName -> "File name \"" <> RichText [RichChunkCode fileName] <> "\" contains characters which may cause problems with different software/operating systems depending on locale and other factors. General advice is to refrain from using non-ASCII characters, ASCII control characters and any of these: " <> RichText [RichChunkCode "\\/:*?\"<>|"] <> "."
 	, locRecordNoBinaries = "No binaries found"
 	, locMessageNoBinaries = "No binaries found in this upload. It's totally OK if it's a non-executable package like book, soundtrack or asset pack. Overwise, it's probably some mistake."
 	, locRecordBinariesCoverPlatforms = "Binaries exist for all declared platforms"

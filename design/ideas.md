@@ -14,6 +14,7 @@
 * DONE Suggest setting display name for uploads with missing display name
 * Suggest using butler for uploads (i.e. detect wharf-non-enabled uploads)
 * Suggest using user-version when using butler
+* Advise against unsafe characters in file names
 
 ## glibc versions by ubuntu version
 

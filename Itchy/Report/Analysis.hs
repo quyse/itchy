@@ -13,6 +13,7 @@ module Itchy.Report.Analysis
 	, analyseGame
 	) where
 
+import Data.Char
 import Data.Hashable
 import qualified Data.HashSet as HS
 import qualified Data.Map.Strict as M
@@ -74,6 +75,7 @@ analyseUpload loc itchUpload@ItchUpload
 		: generalErrorCheckRecords
 		++ unpackCheckRecords
 		++ glibcVersionCheckRecords
+		++ fileNameCheckRecords
 	} where
 	-- check for having display name
 	displayNameCheckRecord = case maybeDisplayName of
@@ -216,42 +218,52 @@ analyseUpload loc itchUpload@ItchUpload
 	glibcVersionCheckRecords =
 		if HS.member PlatformLinux tagsPlatforms then entriesGlibcVersionCheckRecords
 		else []
-	entriesGlibcVersionCheckRecords = foldEntriesGlibcCheckRecords uploadEntries [] []
-	foldEntriesGlibcCheckRecords entries entriesPath records = let
-		foldEntryGlibcCheckRecords (entryName, entry) records = let
-			entryPath = entriesPath ++ [entryName]
-			entryScope = EntryScope uploadId entryPath
-			foldParseGlibcCheckRecords parse records = case parse of
-				ReportParse_binaryElf ReportBinaryElf
-					{ reportBinaryElf_deps = deps
-					} -> case filter (("GLIBC" ==) . reportDep_name) deps of
-					(ReportDep
-						{ reportDep_version = glibcVersion
-						} : _) -> foldDepGlibcCheckRecords glibcVersion records
-					[] -> records
-				_ -> records
-			foldDepGlibcCheckRecords glibcVersion records = case dropWhile ((< glibcVersion) . snd) distroVersions of
-				(((distroName, severity), distroGlibcVersion) : _) -> Record
-					{ recordScope = entryScope
-					, recordSeverity = severity
-					, recordName = locRecordDepVersionRequirement loc distroName
-					, recordMessage = locMessageDepVersionRequirement loc "GLIBC" glibcVersion distroName distroGlibcVersion
-					} : records
-				[] -> Record
-					{ recordScope = entryScope
-					, recordSeverity = SeverityBad
-					, recordName = locRecordDepVersionRequirement loc mempty
-					, recordMessage = mempty
-					} : records
-			in case entry of
-				ReportEntry_file
-					{ reportEntry_parses = parses
-					} -> foldr foldParseGlibcCheckRecords records parses
-				ReportEntry_directory
-					{ reportEntry_entries = entries
-					} -> foldEntriesGlibcCheckRecords entries entryPath records
-				_ -> records
-		in foldr foldEntryGlibcCheckRecords records $ M.toList entries
+	entriesGlibcVersionCheckRecords = foldEntries [] uploadEntries $ \_entryName entryPath entry -> let
+		entryScope = EntryScope uploadId entryPath
+		parseGlibcCheckRecords parse = case parse of
+			ReportParse_binaryElf ReportBinaryElf
+				{ reportBinaryElf_deps = deps
+				} -> case filter (("GLIBC" ==) . reportDep_name) deps of
+				(ReportDep
+					{ reportDep_version = glibcVersion
+					} : _) -> case dropWhile ((< glibcVersion) . snd) distroVersions of
+					(((distroName, severity), distroGlibcVersion) : _) -> [Record
+						{ recordScope = entryScope
+						, recordSeverity = severity
+						, recordName = locRecordDepVersionRequirement loc distroName
+						, recordMessage = locMessageDepVersionRequirement loc "GLIBC" glibcVersion distroName distroGlibcVersion
+						}]
+					[] -> [Record
+						{ recordScope = entryScope
+						, recordSeverity = SeverityBad
+						, recordName = locRecordDepVersionRequirement loc mempty
+						, recordMessage = mempty
+						}]
+				[] -> []
+			_ -> []
+		in case entry of
+			ReportEntry_file
+				{ reportEntry_parses = parses
+				} -> concatMap parseGlibcCheckRecords parses
+			_ -> []
+	-- filename check
+	fileNameCheckRecords = foldEntries [] uploadEntries $ \entryName entryPath _entry -> let
+		checkChar c = isAscii c && isPrint c && T.all (/= c) "\\/:*?\"<>|"
+		in if T.all checkChar entryName then [] else [Record
+			{ recordScope = EntryScope uploadId entryPath
+			, recordSeverity = SeverityWarn
+			, recordName = locRecordUnsafeCharsFileName loc
+			, recordMessage = locMessageUnsafeCharsFileName loc entryName
+			}]
+	-- folding helpers
+	foldEntry :: T.Text -> [T.Text] -> ReportEntry -> (T.Text -> [T.Text] -> ReportEntry -> [a]) -> [a]
+	foldEntry entryName entryPath entry f = f entryName entryPath entry ++ case entry of
+		ReportEntry_directory
+			{ reportEntry_entries = entries
+			} -> foldEntries entryPath entries f
+		_ -> []
+	foldEntries :: [T.Text] -> M.Map T.Text ReportEntry -> (T.Text -> [T.Text] -> ReportEntry -> [a]) -> [a]
+	foldEntries entriesPath entries f = concat $ foldr (:) [] $ map (\(entryName, entry) -> foldEntry entryName (entriesPath ++ [entryName]) entry f) $ M.toList entries
 
 analyseUploadGroup :: Localization -> UploadGroup -> [AnalysisUpload] -> AnalysisUploadGroup
 analyseUploadGroup loc (UploadGroupScope -> scope) uploads = AnalysisUploadGroup

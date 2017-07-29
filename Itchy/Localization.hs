@@ -83,6 +83,8 @@ data Localization = Localization
 	, locRecordUnpackFailed :: !RichText
 	, locRecordDepVersionRequirement :: !(T.Text -> RichText)
 	, locMessageDepVersionRequirement :: !(T.Text -> ReportDepVersion -> T.Text -> ReportDepVersion -> RichText)
+	, locRecordUnsafeCharsFileName :: !RichText
+	, locMessageUnsafeCharsFileName :: !(T.Text -> RichText)
 	, locRecordNoBinaries :: !RichText
 	, locMessageNoBinaries :: !RichText
 	, locRecordBinariesCoverPlatforms :: !RichText
