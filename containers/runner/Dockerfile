@@ -19,15 +19,11 @@ RUN git clone --depth 1 https://github.com/tpoechtrager/cctools-port /root/cctoo
 	&& rm -rf /root/cctools
 
 # build unar
-RUN curl -Lo /root/unar.zip http://unarchiver.c3.cx/downloads/unar1.10.1_src.zip \
-	&& mkdir /root/unar \
-	&& cd /root/unar \
-	&& unzip /root/unar.zip \
-	&& rm /root/unar.zip \
-	&& cd The\ Unarchiver/XADMaster \
+RUN git clone --depth 1 -b unar-1.10.1 https://github.com/incbee/Unarchiver.git /root/unar \
+	&& cd /root/unar/XADMaster \
 	&& make -j$(nproc) -f Makefile.linux \
 	&& mv unar /usr/bin/ \
-	&& rm -r /root/unar
+	&& rm -rf /root/unar
 
 RUN freshclam
 

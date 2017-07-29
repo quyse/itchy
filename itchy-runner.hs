@@ -16,6 +16,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Word
 import qualified Data.Yaml as Y
+import qualified GHC.IO.Encoding
 import Magic
 import qualified Network.HTTP.Client as H
 import qualified Network.HTTP.Client.TLS as H
@@ -76,6 +77,8 @@ data Options = Options
 
 main :: IO ()
 main = do
+	GHC.IO.Encoding.setLocaleEncoding GHC.IO.Encoding.utf8
+
 	maybeUploadFileName <- E.lookupEnv "UPLOAD_FILENAME"
 	uploadId <- (maybe 0 read) <$> E.lookupEnv "UPLOAD_ID"
 	apiKey <- (fromMaybe "") <$> E.lookupEnv "API_KEY"
