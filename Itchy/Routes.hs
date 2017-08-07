@@ -388,7 +388,7 @@ getUploadR uploadId = W.runHandlerM $ do
 																{ reportMachoSubBinary_arch = arch
 																} -> tagArch arch
 														ReportParse_archive {} -> mempty
-														ReportParse_msi {} -> mempty
+														ReportParse_msi {} -> tag "msi"
 													ReportEntry_directory {} -> mempty
 													ReportEntry_symlink
 														{ reportEntry_link = entryLink
