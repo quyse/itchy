@@ -213,6 +213,9 @@ analyseUpload loc itchUpload@ItchUpload
 			} -> foldr HS.insert platforms $ flip map subBinaries $ \ReportMachOSubBinary
 			{ reportMachoSubBinary_arch = arch
 			} -> (PlatformMacOS, arch)
+		ReportParse_archive ReportArchive
+			{ reportArchive_entries = entries
+			} -> foldEntriesPlatforms entries platforms
 		ReportParse_msi ReportMsi
 			{ reportMsi_entries = entries
 			} -> foldEntriesPlatforms entries platforms
@@ -264,6 +267,9 @@ analyseUpload loc itchUpload@ItchUpload
 		ReportEntry_file
 			{ reportEntry_parses = parses
 			} -> flip concatMap parses $ \case
+			ReportParse_archive ReportArchive
+				{ reportArchive_entries = entries
+				} -> foldEntries entryPath entries f
 			ReportParse_msi ReportMsi
 				{ reportMsi_entries = entries
 				} -> foldEntries entryPath entries f

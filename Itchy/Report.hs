@@ -23,6 +23,7 @@ module Itchy.Report
 	, ReportArch(..)
 	, ReportDep(..)
 	, ReportDepVersion(..)
+	, ReportArchive(..)
 	, ReportMsi(..)
 	, reportDepVersionToText
 	) where
@@ -119,6 +120,7 @@ data ReportParse
 	| ReportParse_binaryPe !ReportBinaryPe
 	| ReportParse_binaryElf !ReportBinaryElf
 	| ReportParse_binaryMachO !ReportBinaryMachO
+	| ReportParse_archive !ReportArchive
 	| ReportParse_msi !ReportMsi
 	deriving Generic
 instance S.Serialize ReportParse
@@ -240,6 +242,15 @@ newtype ReportDepVersion = ReportDepVersion [Integer]
 -- | Convert version of binary dependency to text.
 reportDepVersionToText :: ReportDepVersion -> T.Text
 reportDepVersionToText (ReportDepVersion numbers) = T.intercalate "." $ map (T.pack . show) numbers
+
+data ReportArchive = ReportArchive
+	{ reportArchive_entries :: !(M.Map T.Text ReportEntry)
+	} deriving Generic
+instance S.Serialize ReportArchive
+instance A.ToJSON ReportArchive where
+	toJSON = A.genericToJSON jsonOptions
+instance A.FromJSON ReportArchive where
+	parseJSON = A.genericParseJSON jsonOptions
 
 data ReportMsi = ReportMsi
 	{ reportMsi_entries :: !(M.Map T.Text ReportEntry)

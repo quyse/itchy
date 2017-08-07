@@ -394,6 +394,22 @@ run Options
 						Left (SomeException e) -> Left $ T.pack $ show e
 					in f <$> try (Toml.parseTomlDoc ".itch.toml" <$> T.readFile (T.unpack path))
 
+				-- parse archives
+				when
+					(  mime == "application/zip"
+					|| mime == "application/x-tar"
+					|| mime == "application/x-gzip"
+					|| mime == "application/x-bzip2"
+					|| mime == "application/x-xz"
+					|| mime == "application/x-rar"
+					) $ ignoreErrors $ do
+					entries <- withTempDirectory (takeDirectory $ T.unpack path) (T.unpack name) $ \archiveUnpackPath -> do
+						P.callProcess "unar" ["-q", "-s", "-D", "-o", archiveUnpackPath, T.unpack path]
+						parseSubEntries $ T.pack archiveUnpackPath
+					addParse $ ReportParse_archive ReportArchive
+						{ reportArchive_entries = entries
+						}
+
 				-- parse .msi
 				when (mime == "application/x-msi") $ ignoreErrors $ do
 					entries <- withTempDirectory (takeDirectory $ T.unpack path) (T.unpack name) $ \msiUnpackPath -> do
