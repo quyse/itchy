@@ -71,7 +71,6 @@ data Options = Options
 	, optionsUploadId :: {-# UNPACK #-} !Word64
 	, optionsApiKey :: !String
 	, optionsDownloadKeyId :: {-# UNPACK #-} !Word64
-	, optionsUnpackPath :: !String
 	, optionsAvCheck :: !Bool
 	, optionsOutput :: !String
 	, optionsOutputYaml :: !Bool
@@ -116,11 +115,6 @@ main = do
 				<> O.value downloadKeyId <> O.showDefault
 				<> O.metavar "DOWNLOAD_KEY_ID"
 				)
-			<*> O.strOption
-				(  O.long "unpack-path"
-				<> O.value "package" <> O.showDefault
-				<> O.metavar "UNPACK_PATH"
-				)
 			<*> O.switch
 				(  O.long "av-check"
 				)
@@ -152,7 +146,6 @@ run Options
 	, optionsUploadId = uploadId
 	, optionsApiKey = T.pack -> itchToken
 	, optionsDownloadKeyId = downloadKeyId
-	, optionsUnpackPath = unpackPath
 	, optionsAvCheck = avCheck
 	} = withBook $ \bk -> do
 
@@ -211,7 +204,6 @@ run Options
 	handleReport (\e r -> r
 		{ report_unpack = ReportUnpack_failed e
 		}) $ do
-		P.callProcess "unar" ["-q", "-s", "-D", "-o", unpackPath, uploadFileName]
 
 		-- parse entries
 		let
@@ -421,9 +413,8 @@ run Options
 
 				readIORef parsesRef
 
-
-		entries <- parseSubEntries (T.pack unpackPath)
+		rootEntry <- parseEntry (T.pack uploadFileName) (T.pack uploadFileName)
 
 		report $ \r -> r
-			{ report_unpack = ReportUnpack_succeeded entries
+			{ report_unpack = ReportUnpack_succeeded $ M.singleton (T.pack uploadFileName) rootEntry
 			}
