@@ -213,6 +213,9 @@ analyseUpload loc itchUpload@ItchUpload
 			} -> foldr HS.insert platforms $ flip map subBinaries $ \ReportMachOSubBinary
 			{ reportMachoSubBinary_arch = arch
 			} -> (PlatformMacOS, arch)
+		ReportParse_msi ReportMsi
+			{ reportMsi_entries = entries
+			} -> foldEntriesPlatforms entries platforms
 		_ -> platforms
 	-- GLIBC version check
 	glibcVersionCheckRecords =
@@ -258,6 +261,13 @@ analyseUpload loc itchUpload@ItchUpload
 	-- folding helpers
 	foldEntry :: T.Text -> [T.Text] -> ReportEntry -> (T.Text -> [T.Text] -> ReportEntry -> [a]) -> [a]
 	foldEntry entryName entryPath entry f = f entryName entryPath entry ++ case entry of
+		ReportEntry_file
+			{ reportEntry_parses = parses
+			} -> flip concatMap parses $ \case
+			ReportParse_msi ReportMsi
+				{ reportMsi_entries = entries
+				} -> foldEntries entryPath entries f
+			_ -> []
 		ReportEntry_directory
 			{ reportEntry_entries = entries
 			} -> foldEntries entryPath entries f

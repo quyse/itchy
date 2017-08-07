@@ -387,6 +387,7 @@ getUploadR uploadId = W.runHandlerM $ do
 															forM_ subBinaries $ \ReportMachOSubBinary
 																{ reportMachoSubBinary_arch = arch
 																} -> tagArch arch
+														ReportParse_msi {} -> mempty
 													ReportEntry_directory {} -> mempty
 													ReportEntry_symlink
 														{ reportEntry_link = entryLink
@@ -394,6 +395,13 @@ getUploadR uploadId = W.runHandlerM $ do
 														tag $ H.toHtml $ locSymlink loc
 														H.toHtml entryLink
 											case entry of
+												ReportEntry_file
+													{ reportEntry_parses = parses
+													} -> forM_ parses $ \case
+													ReportParse_msi ReportMsi
+														{ reportMsi_entries = entryEntries
+														} -> printEntries (level + 1) entryEntries
+													_ -> mempty
 												ReportEntry_directory
 													{ reportEntry_entries = entryEntries
 													} -> printEntries (level + 1) entryEntries
