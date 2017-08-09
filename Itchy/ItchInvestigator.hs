@@ -14,11 +14,13 @@ module Itchy.ItchInvestigator
 import Control.Concurrent.STM
 import Control.Monad
 import qualified Data.Aeson as A
+import qualified Data.ByteString as B
 import Data.Int
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import Foreign.C.Types
+import System.IO.Temp(withSystemTempDirectory)
+import System.Posix.Files
 import System.Posix.Time
 import qualified System.Process as P
 
@@ -57,16 +59,22 @@ newItchInvestigator itchCache apiKey threadsCount stalePeriod = withSpecialBook 
 				return pair
 			print ("start investigation", uploadId)
 			-- call docker
-			maybeReport <- A.decodeStrict' . T.encodeUtf8 . T.pack <$> P.readProcess "docker"
-				[ "run"
-				, "--rm"
-				, "itchy-runner" -- image
-				, "itchy-runner" -- command
-				, "--upload-filename", T.unpack uploadFileName
-				, "--upload-id", show uploadIdInt
-				, "--api-key", T.unpack apiKey
-				, "--av-check"
-				] ""
+			maybeReport <- withSystemTempDirectory "itchyrun" $ \dataPath -> do
+				setFileMode dataPath 0o777
+				P.callProcess "docker"
+					[ "run"
+					, "--rm"
+					, "-v"
+					, dataPath ++ ":/data"
+					, "itchy-runner" -- image
+					, "itchy-runner" -- command
+					, "--upload-filename", T.unpack uploadFileName
+					, "--upload-id", show uploadIdInt
+					, "--api-key", T.unpack apiKey
+					, "--av-check"
+					, "--output", "/data/report.json"
+					]
+				A.decodeStrict' <$> B.readFile (dataPath ++ "/report.json")
 			-- put in cache
 			atomically $ asyncRunInFlow flow $ do
 				CTime currentTime <- epochTime

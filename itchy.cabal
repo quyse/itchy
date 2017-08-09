@@ -53,6 +53,7 @@ executable itchyd
     , scientific
     , stm
     , template-haskell
+    , temporary
     , text
     , unix
     , unordered-containers
