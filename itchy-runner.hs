@@ -402,6 +402,15 @@ run Options
 						{ reportArchive_entries = entries
 						}
 
+				-- parse .dmg
+				when (T.isSuffixOf ".dmg" name) $ ignoreErrors $ do
+					entries <- withTempDirectory (takeDirectory $ T.unpack path) (T.unpack name) $ \archiveUnpackPath -> do
+						void $ P.readProcess "7z" ["x", "-o" ++ archiveUnpackPath, T.unpack path] ""
+						parseSubEntries $ T.pack archiveUnpackPath
+					addParse $ ReportParse_archive ReportArchive
+						{ reportArchive_entries = entries
+						}
+
 				-- parse .msi
 				when (mime == "application/x-msi") $ ignoreErrors $ do
 					entries <- withTempDirectory (takeDirectory $ T.unpack path) (T.unpack name) $ \msiUnpackPath -> do

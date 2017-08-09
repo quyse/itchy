@@ -1,7 +1,7 @@
 FROM base/archlinux
 
 RUN pacman -Syu --noconfirm
-RUN pacman -S --noconfirm git autoconf automake libtool clang llvm make unzip gcc-objc gnustep-base clamav pkg-config openssl-1.0 libgsf intltool gcab vala gobject-introspection bison
+RUN pacman -S --noconfirm git autoconf automake libtool clang llvm make unzip gcc-objc gnustep-base clamav pkg-config openssl-1.0 libgsf intltool gcab vala gobject-introspection bison p7zip
 
 # set locale to avoid problems with char conversions
 RUN /bin/echo -e 'LANG=en_US.UTF-8\n' > /etc/locale.conf && \
