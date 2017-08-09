@@ -4,6 +4,8 @@ Description: Makes reports about itch uploads.
 License: MIT
 -}
 
+{-# LANGUAGE OverloadedStrings #-}
+
 module Itchy.ItchInvestigator
 	( ItchInvestigator()
 	, newItchInvestigator
@@ -17,6 +19,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString as B
 import Data.Int
 import qualified Data.Map.Strict as M
+import Data.Monoid
 import qualified Data.Text as T
 import Foreign.C.Types
 import System.IO.Temp(withSystemTempDirectory)
@@ -41,8 +44,8 @@ data ItchInvestigator = ItchInvestigator
 	, itchInvestigatorFirstQueuedVar :: {-# UNPACK #-} !(TVar Int)
 	}
 
-newItchInvestigator :: ItchCache -> T.Text -> Int -> Int64 -> IO (ItchInvestigator, IO ())
-newItchInvestigator itchCache apiKey threadsCount stalePeriod = withSpecialBook $ \bk -> do
+newItchInvestigator :: ItchCache -> T.Text -> T.Text -> T.Text -> Int -> Int64 -> IO (ItchInvestigator, IO ())
+newItchInvestigator itchCache apiKey tempTemplate dockerTempTemplate threadsCount stalePeriod = withSpecialBook $ \bk -> do
 	flow <- book bk newFlow
 	refreshingVar <- newTVarIO M.empty
 	processingQueue <- newTQueueIO
@@ -57,15 +60,14 @@ newItchInvestigator itchCache apiKey threadsCount stalePeriod = withSpecialBook 
 				modifyTVar' refreshingVar $ M.insert uploadId $ Right ()
 				modifyTVar' firstQueuedVar (+ 1)
 				return pair
-			print ("start investigation", uploadId)
 			-- call docker
-			maybeReport <- withSystemTempDirectory "itchyrun" $ \dataPath -> do
+			maybeReport <- withSystemTempDirectory (T.unpack tempTemplate) $ \dataPath -> do
 				setFileMode dataPath 0o777
 				P.callProcess "docker"
 					[ "run"
 					, "--rm"
 					, "-v"
-					, dataPath ++ ":/data"
+					, T.unpack $ dockerTempTemplate <> T.drop (T.length tempTemplate) (T.pack dataPath) <> ":/data"
 					, "itchy-runner" -- image
 					, "itchy-runner" -- command
 					, "--upload-filename", T.unpack uploadFileName
@@ -83,7 +85,6 @@ newItchInvestigator itchCache apiKey threadsCount stalePeriod = withSpecialBook 
 					, cachedReport_updated = currentTime
 					}
 				atomically $ modifyTVar' refreshingVar $ M.delete uploadId
-			print ("finish investigation", uploadId)
 
 		f i = when (i < threadsCount) $ do
 			book bk $ forkFlow thread

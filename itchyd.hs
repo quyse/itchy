@@ -55,6 +55,8 @@ data Config = Config
 	, config_itchApiCooldown :: !Int
 	, config_cacheStalePeriod :: !Int64
 	, config_investigationStalePeriod :: !Int64
+	, config_investigatorTempTemplate :: !T.Text
+	, config_investigatorDockerTempTemplate :: !T.Text
 	, config_investigatorThreadsCount :: !Int
 	} deriving Generic
 
@@ -78,6 +80,8 @@ run Options
 		, config_itchApiCooldown = itchApiCooldown
 		, config_cacheStalePeriod = cacheStalePeriod
 		, config_investigationStalePeriod = investigationStalePeriod
+		, config_investigatorTempTemplate = investigatorTempTemplate
+		, config_investigatorDockerTempTemplate = investigatorDockerTempTemplate
 		, config_investigatorThreadsCount = investigatorThreadsCount
 		} <- case eitherConfig of
 		Right config -> return config
@@ -85,7 +89,7 @@ run Options
 
 	itchApi <- book bk $ newItchApi httpManager itchApiKey
 	itchCache <- book bk $ newItchCache itchApi dbFileName cacheStalePeriod itchApiCooldown
-	itchInvestigator <- book bk $ newItchInvestigator itchCache itchApiKey investigatorThreadsCount investigationStalePeriod
+	itchInvestigator <- book bk $ newItchInvestigator itchCache itchApiKey investigatorTempTemplate investigatorDockerTempTemplate investigatorThreadsCount investigationStalePeriod
 
 	logger <- W.mkRequestLogger $ W.def
 		{ W.outputFormat = W.Apache W.FromFallback
