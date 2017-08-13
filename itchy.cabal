@@ -92,6 +92,7 @@ executable itchy-runner
     , unix
     , unordered-containers
     , vector
+    , stm
     , temporary
     , text
     , yaml

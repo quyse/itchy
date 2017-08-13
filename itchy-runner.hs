@@ -2,6 +2,7 @@
 
 module Main(main) where
 
+import Control.Concurrent.STM
 import Control.Exception
 import Control.Monad
 import qualified Data.Aeson as A
@@ -33,6 +34,7 @@ import qualified System.Posix as P
 import qualified Text.Toml as Toml
 
 import Flaw.Book
+import Flaw.Flow
 
 import Itchy.Itch
 import Itchy.Report
@@ -63,8 +65,29 @@ handleReport h io = io `catches`
 ignoreErrors :: IO () -> IO ()
 ignoreErrors = handle $ \SomeException {} -> return ()
 
+handleTimeout :: Int -> IO a -> IO a
+handleTimeout timeout io = do
+	delayVar <- registerDelay timeout
+	resultVar <- newEmptyTMVarIO
+	result <- withBook $ \bk -> do
+		book bk $ forkFlow $ atomically . putTMVar resultVar =<< try io
+		atomically $ do
+			maybeResult <- tryReadTMVar resultVar
+			case maybeResult of
+				Just result -> return result
+				Nothing -> do
+					timedOut <- readTVar delayVar
+					if timedOut then throwSTM TimeOutError
+					else retry
+	case result of
+		Right r -> return r
+		Left e@(SomeException {}) -> throwIO e
+
 data ReportedError = ReportedError deriving Show
 instance Exception ReportedError
+
+data TimeOutError = TimeOutError deriving Show
+instance Exception TimeOutError
 
 data Options = Options
 	{ optionsUploadFileName :: !String
@@ -74,6 +97,9 @@ data Options = Options
 	, optionsAvCheck :: !Bool
 	, optionsOutput :: !String
 	, optionsOutputYaml :: !Bool
+	, optionsDownloadTimeOut :: {-# UNPACK #-} !Int
+	, optionsAVCheckTimeOut :: {-# UNPACK #-} !Int
+	, optionsUnpackTimeOut :: {-# UNPACK #-} !Int
 	}
 
 main :: IO ()
@@ -126,6 +152,21 @@ main = do
 			<*> O.switch
 				(  O.long "output-yaml"
 				)
+			<*> O.option O.auto
+				(  O.long "download-timeout"
+				<> O.value 60000000 <> O.showDefault
+				<> O.metavar "DOWNLOAD_TIMEOUT"
+				)
+			<*> O.option O.auto
+				(  O.long "av-check-timeout"
+				<> O.value 60000000 <> O.showDefault
+				<> O.metavar "AV_CHECK_TIMEOUT"
+				)
+			<*> O.option O.auto
+				(  O.long "unpack-timeout"
+				<> O.value 60000000 <> O.showDefault
+				<> O.metavar "UNPACK_TIMEOUT"
+				)
 
 	options@Options
 		{ optionsOutput = outputFileName
@@ -147,12 +188,15 @@ run Options
 	, optionsApiKey = T.pack -> itchToken
 	, optionsDownloadKeyId = downloadKeyId
 	, optionsAvCheck = avCheck
+	, optionsDownloadTimeOut = downloadTimeOut
+	, optionsAVCheckTimeOut = avCheckTimeOut
+	, optionsUnpackTimeOut = unpackTimeOut
 	} = withBook $ \bk -> do
 
 	-- download if needed
 	if uploadId > 0 then handleReport (\e r -> r
 		{ report_download = ReportDownload_failed e
-		}) $ do
+		}) $ handleTimeout downloadTimeOut $ do
 		-- get http manager
 		httpManager <- H.getGlobalManager
 
@@ -183,7 +227,7 @@ run Options
 	-- AV check
 	if avCheck then handleReport (\e r -> r
 		{ report_avCheck = ReportAVCheck_failed e
-		}) $ do
+		}) $ handleTimeout avCheckTimeOut $ do
 		(exitCode, output, errOutput) <- P.readProcessWithExitCode "clamscan" ["-ria", "--no-summary", uploadFileName] ""
 		case exitCode of
 			ExitSuccess -> report $ \r -> r
@@ -203,7 +247,7 @@ run Options
 	-- unpack
 	handleReport (\e r -> r
 		{ report_unpack = ReportUnpack_failed e
-		}) $ do
+		}) $ handleTimeout unpackTimeOut $ do
 
 		-- parse entries
 		let
