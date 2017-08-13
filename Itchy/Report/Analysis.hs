@@ -73,6 +73,7 @@ analyseUpload loc itchUpload@ItchUpload
 		= displayNameCheckRecord
 		: avCheckRecord
 		: generalErrorCheckRecords
+		++ downloadCheckRecords
 		++ unpackCheckRecords
 		++ glibcVersionCheckRecords
 		++ fileNameCheckRecords
@@ -100,6 +101,27 @@ analyseUpload loc itchUpload@ItchUpload
 			, recordMessage = RichText [RichChunkCode e]
 			}]
 		Nothing -> []
+	-- download check
+	downloadCheckRecords = case report_download report of
+		ReportDownload_notStarted -> [Record
+			{ recordScope = scope
+			, recordSeverity = SeverityInfo
+			, recordName = locRecordDownloadNotStarted loc
+			, recordMessage = mempty
+			}]
+		ReportDownload_skipped -> [Record
+			{ recordScope = scope
+			, recordSeverity = SeverityInfo
+			, recordName = locRecordDownloadSkipped loc
+			, recordMessage = mempty
+			}]
+		ReportDownload_succeeded -> []
+		ReportDownload_failed e -> [Record
+			{ recordScope = scope
+			, recordSeverity = SeverityErr
+			, recordName = locRecordDownloadFailed loc
+			, recordMessage = locMessageDownloadFailed loc e
+			}]
 	-- AV check
 	avCheckRecord = case report_avCheck report of
 		ReportAVCheck_notStarted -> Record

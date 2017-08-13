@@ -75,6 +75,10 @@ data Localization = Localization
 	, locRecordUploadDisplayNameNotSet :: !RichText
 	, locMessageUploadDisplayNameNotSet :: !RichText
 	, locRecordUnknownError :: !RichText
+	, locRecordDownloadNotStarted :: !RichText
+	, locRecordDownloadSkipped :: !RichText
+	, locRecordDownloadFailed :: !RichText
+	, locMessageDownloadFailed :: !(T.Text -> RichText)
 	, locRecordAVCheckNotStarted :: !RichText
 	, locRecordAVCheckSkipped :: !RichText
 	, locRecordAVCheckOk :: !RichText
