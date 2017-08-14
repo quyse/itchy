@@ -438,6 +438,7 @@ run Options
 					|| mime == "application/x-bzip2"
 					|| mime == "application/x-xz"
 					|| mime == "application/x-rar"
+					|| mime == "application/vnd.debian.binary-package"
 					) $ ignoreErrors $ do
 					entries <- withTempDirectory (takeDirectory $ T.unpack path) (T.unpack name) $ \archiveUnpackPath -> do
 						P.callProcess "unar" ["-q", "-s", "-D", "-o", archiveUnpackPath, T.unpack path]
