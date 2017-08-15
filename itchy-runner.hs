@@ -430,15 +430,13 @@ run Options
 						Left (SomeException e) -> Left $ T.pack $ show e
 					in f <$> try (Toml.parseTomlDoc ".itch.toml" <$> T.readFile (T.unpack path))
 
-				-- parse archives
+				-- parse archives with unar
 				when
-					(  mime == "application/zip"
-					|| mime == "application/x-tar"
+					(  mime == "application/x-tar"
 					|| mime == "application/x-gzip"
 					|| mime == "application/x-bzip2"
 					|| mime == "application/x-xz"
 					|| mime == "application/x-rar"
-					|| mime == "application/x-7z-compressed"
 					|| mime == "application/vnd.debian.binary-package"
 					) $ ignoreErrors $ do
 					entries <- withTempDirectory (takeDirectory $ T.unpack path) (T.unpack name) $ \archiveUnpackPath -> do
@@ -448,8 +446,12 @@ run Options
 						{ reportArchive_entries = entries
 						}
 
-				-- parse .dmg
-				when (T.isSuffixOf ".dmg" name) $ ignoreErrors $ do
+				-- parse archives with 7z
+				when
+					(  mime == "application/zip"
+					|| mime == "application/x-7z-compressed"
+					|| T.isSuffixOf ".dmg" name
+					) $ ignoreErrors $ do
 					entries <- withTempDirectory (takeDirectory $ T.unpack path) (T.unpack name) $ \archiveUnpackPath -> do
 						void $ P.readProcess "7z" ["x", "-o" ++ archiveUnpackPath, T.unpack path] ""
 						parseSubEntries $ T.pack archiveUnpackPath
