@@ -42,7 +42,7 @@ code
 .footer
 	margin-top 50px
 	text-align center
-	& > .localizations
+	& .localizations
 		& > a
 			margin-left 3px
 			margin-right 3px
