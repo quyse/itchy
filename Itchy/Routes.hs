@@ -517,6 +517,7 @@ page titleText pieces bodyHtml = do
 		Just (BA.convertFromBase BA.Base64URLUnpadded . T.encodeUtf8 -> Right (S.decode -> Right user)) -> Just user
 		_ -> Nothing
 	showRoute <- W.showRouteSub
+	loc <- getLocalization
 	W.html $ TL.toStrict $ H.renderHtml $ H.docTypeHtml $ do
 		H.head $ do
 			H.meta ! A.charset "utf-8"
@@ -547,7 +548,9 @@ page titleText pieces bodyHtml = do
 			H.h1 $ H.toHtml titleText
 			bodyHtml
 			H.div ! A.class_ "footer" $ do
-				H.span ! A.class_ "localizations" $ forM_ localizations $ \(locale, localization) ->
-					H.a ! A.href ("?locale=" <> H.toValue locale) $ H.toHtml $ locLanguageName localization
-				H.span " | "
-				H.a ! A.href "https://github.com/quyse/itchy" ! A.target "_blank" $ "Github"
+				H.div $ H.toHtml $ locNoAffiliation loc
+				H.div $ do
+					H.span ! A.class_ "localizations" $ forM_ localizations $ \(locale, localization) ->
+						H.a ! A.href ("?locale=" <> H.toValue locale) $ H.toHtml $ locLanguageName localization
+					H.span " | "
+					H.a ! A.href "https://github.com/quyse/itchy" ! A.target "_blank" $ "Github"

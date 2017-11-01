@@ -24,11 +24,12 @@ localizationEn :: Localization
 localizationEn = Localization
 	{ locLanguageName = "English"
 	, locHome = "itch.io Sanity Checker"
-	, locWelcome = "Welcome to itch.io Sanity Checker. Try to search for your game by entering a few keywords, and wait for a report. Beware: it's alpha software, results may be weird. This service is unofficial and is not affiliated with itch.io."
+	, locWelcome = "Welcome to itch.io Sanity Checker. Try to search for your game by entering a few keywords, and wait for a report. Beware: it's alpha software, results may be weird."
 	, locSearchGameByName = "Search for game by name:"
 	, locSearch = "Search"
 	, locGoToGameByUrl = "Go to game by url:"
 	, locGo = "Go"
+	, locNoAffiliation = "This service is unofficial and is not affiliated with itch.io"
 	, locGameByAuthor = \game author -> game <> " by " <> author
 	, locLink = \url -> "Link: " <> RichText [RichChunkLink url url]
 	, locDescription = \desc -> "Description: " <> desc

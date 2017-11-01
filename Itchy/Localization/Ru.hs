@@ -24,11 +24,12 @@ localizationRu :: Localization
 localizationRu = Localization
 	{ locLanguageName = "Русский"
 	, locHome = "Ковырятор itch.io"
-	, locWelcome = "Ковырятор itch.io говорит вам привет! Попробуйте найти вашу игру, введя несколько ключевых слов, дождитесь завершения ковыряционного анализа, и порадуйтесь отчёту. Внимание: это альфа версия, может показывать странное. Данный сервис неофициальный, и никак не аффилирован с itch.io."
+	, locWelcome = "Это ковырятор itch.io. Попробуйте найти вашу игру, введя несколько ключевых слов, дождитесь завершения ковыряционного анализа, и порадуйтесь отчёту. Внимание: это альфа версия, что-нибудь может пойти не так."
 	, locSearchGameByName = "Поиск игры по имени:"
 	, locSearch = "Поиск"
 	, locGoToGameByUrl = "Переход к игре по URL:"
 	, locGo = "Перейти"
+	, locNoAffiliation = "Данный сервис неофициальный, и никак не аффилирован с itch.io"
 	, locGameByAuthor = \game author -> game <> " от " <> author
 	, locLink = \url -> "Ссылка: " <> RichText [RichChunkLink url url]
 	, locDescription = \desc -> "Описание: " <> desc
