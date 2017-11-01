@@ -9,3 +9,6 @@ packages:
   - flaw-base
   - flaw-lmdb
   extra-dep: true
+
+ghc-options:
+  "*": -threaded -with-rtsopts=-N -Wall -fno-warn-unsupported-calling-conventions -Wno-tabs
