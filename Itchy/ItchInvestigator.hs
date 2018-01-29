@@ -73,7 +73,7 @@ newItchInvestigator itchCache apiKey tempTemplate dockerTempTemplate threadsCoun
 					, "--upload-filename", T.unpack uploadFileName
 					, "--upload-id", show uploadIdInt
 					, "--api-key", T.unpack apiKey
-					, "--av-check"
+					-- , "--av-check"
 					, "--output", "/data/report.json"
 					]
 				A.decodeStrict' <$> B.readFile (dataPath ++ "/report.json")

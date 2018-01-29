@@ -1,7 +1,7 @@
 FROM base/archlinux
 
 RUN pacman -Syu --noconfirm
-RUN pacman -S --noconfirm git autoconf automake libtool clang llvm make unzip gcc-objc gnustep-base clamav pkg-config openssl-1.0 libgsf intltool gcab vala gobject-introspection bison p7zip
+RUN pacman -S --noconfirm numactl git autoconf automake libtool clang llvm make unzip gcc-objc clamav pkg-config openssl-1.0 libgsf intltool gcab vala gobject-introspection bison p7zip
 
 # set locale to avoid problems with char conversions
 RUN /bin/echo -e 'LANG=en_US.UTF-8\n' > /etc/locale.conf && \
@@ -17,6 +17,25 @@ RUN git clone --depth 1 https://github.com/tpoechtrager/cctools-port /root/cctoo
 	&& make -j$(nproc) \
 	&& make install \
 	&& rm -rf /root/cctools
+
+# build gnustep-make
+RUN git clone --depth 1 https://github.com/gnustep/tools-make /root/gnustep-make \
+	&& cd /root/gnustep-make \
+	&& autoreconf --install --force \
+	&& ./configure \
+	&& make -j$(nproc) \
+	&& make install \
+	&& rm -rf /root/gnustep-make
+
+# build gnustep-base
+RUN git clone --depth 1 https://github.com/gnustep/libs-base /root/gnustep-base \
+	&& cd /root/gnustep-base \
+	&& source /usr/local/share/GNUstep/Makefiles/GNUstep.sh \
+	&& autoreconf --install --force \
+	&& ./configure \
+	&& make -j$(nproc) \
+	&& make install \
+	&& rm -rf /root/gnustep-base
 
 # build unar
 RUN git clone --depth 1 -b unar-1.10.1 https://github.com/incbee/Unarchiver.git /root/unar \
@@ -44,7 +63,7 @@ RUN git clone --depth 1 -b v0.97 https://github.com/GNOME/msitools.git /root/msi
 	&& make install \
 	&& rm -rf /root/msitools
 
-RUN freshclam
+# RUN freshclam
 
 RUN useradd -m -s /bin/bash runner
 ENV GHCRTS=-N1 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/cctools/bin LANG=en_US.UTF-8
