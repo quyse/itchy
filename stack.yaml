@@ -8,5 +8,8 @@ packages:
   - flaw-lmdb
   extra-dep: true
 
+extra-deps:
+- wai-routes-0.10.1
+
 ghc-options:
   "$locals": -threaded -with-rtsopts=-N -Wall -fno-warn-unsupported-calling-conventions -Wno-tabs
