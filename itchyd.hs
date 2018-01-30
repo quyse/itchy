@@ -93,7 +93,6 @@ run Options
 
 	logger <- W.mkRequestLogger $ W.def
 		{ W.outputFormat = W.Apache W.FromFallback
-		, W.autoFlush = False
 		}
 	Warp.runSettings
 		( Warp.setHost (fromString $ T.unpack host)
