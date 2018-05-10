@@ -150,10 +150,12 @@ analyseUpload loc itchUpload@ItchUpload
 			}
 	distroVersions =
 		[ (("Ubuntu 12.04 \"precise\"", SeverityOk), ReportDepVersion [2, 15])
-		, (("Ubuntu 14.04 \"trusty\"", SeverityWarn), ReportDepVersion [2, 19])
+		, (("Ubuntu 14.04 \"trusty\"", SeverityOk), ReportDepVersion [2, 19])
 		, (("Ubuntu 16.04 \"xenial\"", SeverityWarn), ReportDepVersion [2, 23])
 		, (("Ubuntu 16.10 \"yakkety\"", SeverityWarn), ReportDepVersion [2, 24, 3])
 		, (("Ubuntu 17.04 \"zesty\"", SeverityWarn), ReportDepVersion [2, 24, 7])
+		, (("Ubuntu 17.10 \"artful\"", SeverityWarn), ReportDepVersion [2, 26])
+		, (("Ubuntu 18.04 \"bionic\"", SeverityWarn), ReportDepVersion [2, 27, 3])
 		]
 	-- checks related to unpack
 	unpackCheckRecords = case report_unpack report of
