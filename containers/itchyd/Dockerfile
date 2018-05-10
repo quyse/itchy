@@ -1,6 +1,7 @@
-FROM centos:7
+FROM base/archlinux
 
-RUN yum install -y numactl docker-client
+RUN pacman -Syu --noconfirm
+RUN pacman -S --noconfirm numactl docker
+
 COPY itchyd /usr/bin/
-ENV LANG=en_US.UTF-8
 CMD itchyd --config /var/itchy/itchy.yaml
