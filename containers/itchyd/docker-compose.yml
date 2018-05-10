@@ -6,10 +6,7 @@ services:
       context: .
     image: itchyd:latest
     ports:
-    - target: 8888
-      published: 80
-      protocol: tcp
-      mode: host
+    - "127.0.0.1:8888:8888"
     restart: on-failure
     volumes:
     - "/opt/itchy:/var/itchy"
