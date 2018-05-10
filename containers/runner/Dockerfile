@@ -65,6 +65,9 @@ RUN git clone --depth 1 -b v0.97 https://github.com/GNOME/msitools.git /root/msi
 
 # RUN freshclam
 
+# temporary: install old version of file, as libmagic-5.33 crashes
+RUN pacman -U --noconfirm https://archive.archlinux.org/packages/f/file/file-5.32-1-x86_64.pkg.tar.xz
+
 RUN useradd -m -s /bin/bash runner
 ENV GHCRTS=-N1 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/cctools/bin LANG=en_US.UTF-8
 COPY itchy-runner /usr/bin/itchy-runner
