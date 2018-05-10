@@ -11,7 +11,6 @@ module Itchy.Localization.En
 	) where
 
 import Data.Maybe
-import Data.Monoid
 import qualified Data.Text as T
 import Numeric
 

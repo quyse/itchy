@@ -17,7 +17,7 @@ import qualified Text.Blaze as TB
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
-newtype RichText = RichText [RichChunk] deriving (Eq, Ord, Monoid)
+newtype RichText = RichText [RichChunk] deriving (Eq, Ord, Semigroup, Monoid)
 
 instance IsString RichText where
 	fromString s = RichText [fromString s]

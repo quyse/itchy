@@ -11,7 +11,6 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as M
 import Data.IORef
 import Data.Maybe
-import Data.Monoid
 import qualified Data.Serialize as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T

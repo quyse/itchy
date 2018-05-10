@@ -19,7 +19,6 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString as B
 import Data.Int
 import qualified Data.Map.Strict as M
-import Data.Monoid
 import qualified Data.Text as T
 import Foreign.C.Types
 import System.IO.Temp(withSystemTempDirectory)

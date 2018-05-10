@@ -9,7 +9,10 @@ packages:
   extra-dep: true
 
 extra-deps:
+- magic-1.1
 - wai-routes-0.10.1
+
+allow-newer: true
 
 ghc-options:
   "$locals": -threaded -with-rtsopts=-N -Wall -fno-warn-unsupported-calling-conventions -Wno-tabs

@@ -35,7 +35,6 @@ import qualified Data.Aeson.Types as A
 import qualified Data.ByteString as B
 import Data.Hashable
 import qualified Data.HashMap.Lazy as HM
-import Data.Monoid
 import qualified Data.Serialize as S
 import Data.Serialize.Text()
 import Data.Scientific(toBoundedInteger)

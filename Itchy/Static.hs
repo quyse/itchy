@@ -17,7 +17,6 @@ import qualified Data.ByteArray as BA
 import qualified Data.ByteArray.Encoding as BA
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
-import Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Language.Haskell.TH

@@ -19,7 +19,6 @@ import Data.Int
 import Data.List
 import qualified Data.Map.Strict as M
 import Data.Maybe
-import Data.Monoid
 import qualified Data.Serialize as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T

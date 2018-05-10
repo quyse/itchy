@@ -3,7 +3,6 @@
 module Main(main) where
 
 import Control.Exception
-import Data.Monoid
 import qualified Data.Aeson.Types as A
 import Data.Int
 import Data.String
